@@ -6,6 +6,58 @@ and next action after each phase.
 
 ---
 
+## Phase 12 — 12_DEMO_RUNBOOK_AND_CUT_LINES.md (rehearsal + final checklist)
+
+- Date/time (UTC): 2026-10-14
+- Files changed: `12_DEMO_RUNBOOK_AND_CUT_LINES.md` tracked. No code changes —
+  rehearsal only. Presenter mapping: runbook `curtailment_heavy` = `s2`
+  ("Curtailment Summer"); `baseline` = `s0`; operational = `s1`.
+
+### Live-API rehearsal (TestClient, all 3-minute beats PASS)
+- 0:00 scenarios selectable incl. s2; disclosure `data_disclosure="Synthetic demo data"`.
+- 0:20 s2 FY gap −2424.5 MWh (−4.731%, −65.5 lakh INR @ ₹2.7).
+- 0:45 curtailment −1431 MWh dominant, claimable + contract-review wording;
+  interaction explicit, both views reconcile exactly.
+- 1:25 s3 unexplained −759.7 MWh beyond 90% band (−736.6 to −724.4) with ≥3
+  missing-data items; nothing forced into named causes.
+- 1:55 hidden outcomes: s1/s3 in-unexplained ✓, s0/s2 honestly below floor;
+  reconciliation closes on all four.
+- 2:30 server report 200, HTML, >3 KB; print-tab + print CSS present.
+- Hard questions answerable from product: Shapley (sequential-swing demo),
+  no-causality-proof (limitation text), synthetic rationale, claimable-only-a-flag,
+  limitations disclosed. (One rehearsal-check typo on my side — `shares` vs
+  `share` — re-verified True; product was correct.)
+
+### Final pre-demo checklist (§5 — all checked)
+- [x] Frontend visually unchanged (proof: `style.css` untouched since 4a13e5c;
+  `index.html` +1 div; `app.js` behavior-only; no CSS/layout/nav changes).
+- [x] Health check passes. [x] 4 scenarios selectable (superset of 3, no cut needed).
+- [x] All cause areas in every response. [x] Order-independent (tested).
+- [x] Interaction explicit, never double-counted (both `closes` flags tested).
+- [x] Unexplained prominent + band/status (tested, incl. zero-gap branch).
+- [x] Hidden never falsely named (tested all scenarios).
+- [x] Exact serialized reconciliation (tested over all 52 analysis JSONs + live POST).
+- [x] Evidence resolves per cause (tested). [x] Claimability = contract review (tested).
+- [x] Report/print works (endpoint + tab tested; needs a real browser for the
+  visual print pass — no browser tooling in sandbox, recorded).
+- [x] No secrets in Git (scanned 11; rehearse-confirmed clean).
+- [x] All tests run + recorded: **41/41 PASS** final.
+- [x] Every demo value synthetic-labelled (badge/footer/flags/report/contract field).
+
+### Cut lines (as-shipped status)
+1. PDF → print-friendly page: CUT (recorded; samples in `sample_reports/`).
+2. MC 80 (not hundreds): KEPT-AS-DOCUMENTED (runtime-measured, bands honest).
+3. Claimable flag: KEPT (responsibly worded, curtailment-only).
+4. Scenarios: NO CUT NEEDED (4 shipped: s0 baseline added in Phase 1).
+- Never-cut items all hold: reconciliation, unexplained, validation, disclosure,
+  frontend preservation.
+
+### Sequence complete
+- All 12 files processed in order (01→12), each implemented, tested, logged, and
+  pushed. Suite grew 8 → 41 tests with zero regressions at any step.
+
+---
+
 ## Phase 11 — 11_ENVIRONMENT_DEPLOYMENT_AND_SECURITY.md (config + safety audit)
 
 - Date/time (UTC): 2026-10-14

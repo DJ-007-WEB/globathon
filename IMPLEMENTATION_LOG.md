@@ -6,6 +6,48 @@ and next action after each phase.
 
 ---
 
+## Phase 7 — 07_FASTAPI_BACKEND.md (routes, validation, errors, CORS, tests)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/vareng/attribution.py` — `analyze(..., tariff=2.70)` parameter; every
+    INR figure flows from it (defaults reproduce existing numbers exactly).
+  - `engine/vareng/contract.py` — unit descriptions on all numeric fields
+    (kWh, INR, INR/kWh, percentile).
+  - `engine/api.py` — 07 implementation on the existing Starlette convention:
+    `GET /api/scenarios/{id}` (metadata + quality flags, no paths); `POST
+    /api/analysis` (scenario/period/tariff/seed/n_mc, all bounded per 03/07);
+    `POST /api/validation/run`; `POST /api/reports/variance` (print-ready HTML
+    recomputed from a validated request — the 10 §2 PDF stays a cut line);
+    spec error envelope `{success:false,error:{code,message,details,request_id}}`
+    with 404 UNKNOWN_SCENARIO / 422 *_INVALID_* / 500 without stack traces;
+    `X-Request-ID` header; server-side runtime logging without secrets; CORS from
+    `FRONTEND_ORIGINS` env; historical GET shapes byte-compatible (frontend maps
+    them; health body now the 07 envelope — frontend only checks HTTP status).
+  - `engine/tests/test_api.py` — NEW (9 tests: all 07 §6 expectations).
+  - `engine/tests/run_tests.py` — discovers `test_api`.
+  - `07_FASTAPI_BACKEND.md` — tracked.
+
+### Preserved deviations (index rule)
+- Starlette kept (no FastAPI swap → no auto OpenAPI docs; route docstrings added).
+  POST added alongside GET (not replacing) so the existing UI keeps working.
+- Data endpoints stay unenveloped (frontend consumes bare contract); envelope
+  applies to health + errors only.
+- Timestamps stay consistent naive-local strings (plant is IST-based synthetic);
+  no TZ-format churn in displayed evidence windows.
+- Sync compute, no queue (07 allows); MC capped at `MAX_MONTE_CARLO_SAMPLES`=200.
+
+### Commands run + results
+- Live TestClient smoke: health/scenarios/detail/404/GET-POST analysis/invalid
+  inputs/validation-run/report — all as expected (incl. tariff=3.0 flowing to INR).
+- `python tests/run_tests.py` → **33/33 PASS** (16 engine + 5 contract + 3 physics
+  + 9 api). Default-tariff outputs unchanged (no `frontend/data` drift).
+
+### Known issues / next action
+- Next: `08_FRONTEND_INTEGRATION_NO_REDESIGN.md` (mapping audit; outage/fallback UX).
+
+---
+
 ## Phase 6 — 06_UNCERTAINTY_CLASSIFICATION_AND_EVIDENCE.md (conformance + test)
 
 - Date/time (UTC): 2026-10-14

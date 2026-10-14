@@ -102,7 +102,8 @@ def _pct_rank(hist, x):
     return 100.0*(np.sum(hist < x) + 0.5*np.sum(hist == x))/len(hist)
 
 # ------------------------------------------------------------------ main entry
-def analyze(world: World, period: str = "FY", n_mc: int = N_MC, seed: int = 123) -> dict:
+def analyze(world: World, period: str = "FY", n_mc: int = N_MC, seed: int = 123,
+            tariff: float = TARIFF_INR_PER_KWH) -> dict:
     sl = _p_slice(world, period); pl = world.plant
     act, a_meas, d_cal, n_cal = _actual_state(world)
     core = _core(world, act, a_meas, sl)
@@ -128,7 +129,7 @@ def analyze(world: World, period: str = "FY", n_mc: int = N_MC, seed: int = 123)
     gap_m = to_m(gap); phi_m = [to_m(v) for v in phi]; main_m = [to_m(v) for v in main]
     U_m = gap_m - sum(phi_m)
     inter_m = sum(phi_m) - sum(main_m)
-    tar = TARIFF_INR_PER_KWH
+    tar = float(tariff)
     inr = lambda kwh: round(kwh*tar, 2)
 
     # ---- weather percentile vs 30-year synthetic record

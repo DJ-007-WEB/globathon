@@ -189,16 +189,21 @@ function rValid() {
 
 // ---------------------------------------------------------------- report
 function rReport() {
-  const a = S.a, u = a.unexplained;
+  const a = S.a, u = a.unexplained, v = S.v, w = a.weather;
   $("#view-report").innerHTML = `<div class="noprint" style="text-align:right;margin-bottom:10px"><button class="btn" onclick="window.print()">Print / Save as PDF</button></div>
   <div class="report"><h1>Investor variance report</h1><div class="note">${esc(a.plant_name)} · ${esc(a.period_label)} · model ${esc(a.model_version)} · <b>SYNTHETIC DATA</b></div>
   <h2>Summary</h2><p>${esc(a.narrative.text)}</p><div class="note">Every number in this paragraph is machine-checked against engine output: ${a.narrative.numbers_checked ? "passed ✓" : "FAILED"}.</div>
   <h2>Waterfall</h2>${waterfall(a)}
   <h2>Causes</h2><table><tr><th>Cause</th><th>Class</th><th>MWh</th><th>₹ lakh</th><th>90% band (MWh)</th><th>Confidence</th></tr>
   ${a.components.filter(c => c.present).map(c => `<tr><td>${esc(c.cause)}${c.claimable ? " (potentially claimable)" : ""}</td><td>${esc(c.class_label)}</td><td>${fmt(c.kwh / 1000, 1)}</td><td>${fmt(c.inr / 1e5, 1)}</td><td>${fmt(c.lower_kwh / 1000, 0)} to ${fmt(c.upper_kwh / 1000, 0)}</td><td>${c.confidence}</td></tr>`).join("")}
+  <tr><td>Interaction (non-additive diagnostic)</td><td>–</td><td>${fmt(a.interaction.kwh / 1000, 1)}</td><td>${fmt(a.interaction.inr / 1e5, 1)}</td><td>–</td><td>–</td></tr>
   <tr style="background:#fffbeb"><td><b>Unexplained</b></td><td>–</td><td><b>${fmt(u.kwh / 1000, 1)}</b></td><td>${fmt(u.inr / 1e5, 1)}</td><td>${fmt(u.lower_kwh / 1000, 0)} to ${fmt(u.upper_kwh / 1000, 0)}</td><td>${u.confidence}</td></tr>
   <tr><td><b>Total gap</b></td><td></td><td><b>${fmt(a.gap_kwh / 1000, 1)}</b></td><td>${fmt(a.gap_inr / 1e5, 1)}</td><td></td><td></td></tr></table>
-  <h2>Unexplained</h2><p>${esc(u.message)}</p><p class="note">Data that would reduce it: ${u.data_that_would_reduce_it.map(esc).join("; ")}.</p>
+  <div class="note">${esc(a.interaction.note)}</div>
+  <h2>Unexplained</h2><p>${esc(u.message)}</p>${u.pct_of_gap == null ? "" : `<p>It is ${fmt(u.pct_of_gap, 1)}% of the total gap.</p>`}<p class="note">Data that would reduce it: ${u.data_that_would_reduce_it.map(esc).join("; ")}.</p>
+  <h2>Weather</h2><p>Irradiance percentile <b>${fmt(w.percentile, 0)}</b> of ${w.history_years} synthetic years (stand-in for a reanalysis record such as ERA5; licence and real data pending): ${esc(w.statement)}. Typical year ${fmt(w.typical_year_kwh_m2, 0)} kWh/m² (${fmt(w.delta_pct, 1)}%). Mean temperature ${fmt(w.temperature_c, 1)} °C (percentile ${fmt(w.temperature_percentile, 0)}).</p>
+  <h2>Evidence</h2>${a.evidence.map(e => `<p class="note"><b>${esc(e.title)}</b> — ${esc(e.window)} · ${esc(e.signal)}${e.kwh != null ? " · " + sg(e.kwh, 1) : ""}<br>${esc(e.detail)}</p>`).join("")}
+  <h2>Validation</h2><p class="note">Injected truth vs recovered (${esc(v.scenario_name)}): ${v.summary.named_recovered}/${v.summary.named_causes_material} named causes recovered (${esc(v.tolerance)}). Hidden cause: ${v.hidden.landed_in_unexplained ? "found in Unexplained ✓" : v.hidden.below_detection_floor ? "below detection floor" : "missed"}. Reconciliation ${v.summary.reconciliation_closes ? "closes exactly ✓" : "FAILS"}. ${esc(v.limitation)}</p>
   <h2>Method and caveats</h2><p class="note">Order-independent (Shapley) attribution over a 7-switch plant simulator; unexplained = metered − simulated; 90% bands from ${a.monte_carlo.samples} Monte Carlo runs. Forecast-model derate calibrated on ${a.calibration.hours_used} hours (${esc(a.calibration.window)}). ${a.data_quality_flags.map(esc).join(" ")} Curtailment flags are not legal conclusions.</p></div>`;
 }
 init();

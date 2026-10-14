@@ -6,6 +6,44 @@ and next action after each phase.
 
 ---
 
+## Phase 10 — 10_REPORTING_AND_NARRATIVE.md (12-item report audit)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `frontend/app.js` (`rReport`) — added interaction row + convention note,
+    unexplained %-of-gap sentence, Weather section, Evidence section, Validation
+    summary (from `S.v`). All strings escaped, all numbers engine-sourced.
+  - `engine/api.py` (`_report_html`) — same additions server-side (interaction,
+    weather, evidence, %-of-gap) + None-safe rendering.
+  - `engine/tests/test_api.py` — report 12-item marker audit (server HTML) +
+    frontend template marker test; None-leak guard.
+  - `10_REPORTING_AND_NARRATIVE.md` — tracked.
+
+### 12-item audit outcome (both reports now carry all 12)
+- Title/period, plant metadata (30 MWp in plant name), SYNTHETIC DATA disclosure,
+  headline numbers, cause table (class/confidence/claimable), interaction +
+  convention, unexplained (+band, %-of-gap, missing data), weather percentile +
+  reference, evidence + signals, method + engine version, validation summary,
+  limitations + non-legal disclaimer: DONE (interaction/weather/evidence/
+  validation-summary/pct were gaps — fixed this phase).
+- Single calculation path: both render the same analysis object (server recomputes
+  from a validated request, never trusts client figures); inputs validated;
+  escaping on both sides (server `html.escape`, client `esc()`).
+- PDF = deliberate cut line per 10 §2 (print stylesheet + print-ready server page;
+  sample PDFs in `sample_reports/`); no second math path introduced.
+- Narrative (§3/§4): template fallback only (no LLM wired — README-recorded);
+  number-checker enforced + tested; sign/units/uncertainty preserved; claimable
+  wording without entitlement claims.
+
+### Commands run + results
+- `python tests/run_tests.py` → **40/40 PASS** (one self-caught marker bug in the
+  new test fixed: template uses destructured `v`, asserted via section headers).
+
+### Known issues / next action
+- Next: `11_ENVIRONMENT_DEPLOYMENT_AND_SECURITY.md` (.env.example, secret/input audit).
+
+---
+
 ## Phase 9 — 09_VALIDATION_TESTING_AND_ACCEPTANCE.md (gates A–E + tests)
 
 - Date/time (UTC): 2026-10-14

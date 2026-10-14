@@ -223,6 +223,12 @@ def _report_html(a: dict, v: dict) -> str:
         f"<td>{c['lower_kwh']/1000:,.0f} to {c['upper_kwh']/1000:,.0f}</td><td>{e(c['confidence'])}</td></tr>"
         for c in a["components"] if c["present"])
     u = a["unexplained"]
+    w = a["weather"]
+    ev = "".join(
+        f"<p class=\"note\"><b>{e(x['title'])}</b> — {e(x['window'])} · {e(x['signal'])}"
+        f"{(' · %+.1f MWh' % (x['kwh']/1000)) if x['kwh'] is not None else ''}<br>{e(x['detail'])}</p>"
+        for x in a["evidence"])
+    pct = "" if u["pct_of_gap"] is None else f" It is {u['pct_of_gap']:.1f}% of the total gap."
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>Investor variance report — {e(a['period_label'])}</title>
 <style>body{{font:14px/1.5 system-ui,sans-serif;max-width:900px;margin:32px auto;padding:0 16px}}table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #ddd;padding:6px 8px;text-align:right}}th:first-child,td:first-child{{text-align:left}}.note{{color:#555;font-size:12.5px}}@media print{{.noprint{{display:none}}}}</style>
 </head><body><div class="noprint"><button onclick="window.print()">Print / Save as PDF</button></div>
@@ -231,9 +237,13 @@ def _report_html(a: dict, v: dict) -> str:
 <h2>Summary</h2><p>{e(a['narrative']['text'])}</p>
 <h2>Headline</h2><p>Forecast {a['forecast_kwh']/1000:,.0f} MWh · Actual {a['actual_kwh']/1000:,.0f} MWh · Gap {a['gap_kwh']/1000:,.1f} MWh ({a['gap_pct']:.1f}%) · {a['gap_inr']/1e5:,.1f} lakh INR at ₹{a['tariff_inr_per_kwh']}/kWh (assumed tariff).</p>
 <h2>Causes</h2><table><tr><th>Cause</th><th>Class</th><th>MWh</th><th>₹ lakh</th><th>90% band (MWh)</th><th>Confidence</th></tr>{rows}
+<tr><td>Interaction (non-additive diagnostic)</td><td>–</td><td>{a['interaction']['kwh']/1000:,.1f}</td><td>{a['interaction']['inr']/1e5:,.1f}</td><td>–</td><td>–</td></tr>
 <tr><td><b>Unexplained</b></td><td>–</td><td><b>{u['kwh']/1000:,.1f}</b></td><td>{u['inr']/1e5:,.1f}</td><td>{u['lower_kwh']/1000:,.0f} to {u['upper_kwh']/1000:,.0f}</td><td>{e(u['confidence'])}</td></tr>
 <tr><td><b>Total gap</b></td><td></td><td><b>{a['gap_kwh']/1000:,.1f}</b></td><td>{a['gap_inr']/1e5:,.1f}</td><td></td><td></td></tr></table>
-<h2>Unexplained</h2><p>{e(u['message'])}</p><p class="note">Data that would reduce it: {e('; '.join(u['data_that_would_reduce_it']))}.</p>
+<p class="note">{e(a['interaction']['note'])}</p>
+<h2>Unexplained</h2><p>{e(u['message'])}{e(pct)}</p><p class="note">Data that would reduce it: {e('; '.join(u['data_that_would_reduce_it']))}.</p>
+<h2>Weather</h2><p>Irradiance percentile <b>{w['percentile']:.0f}</b> of {w['history_years']} synthetic years (reanalysis stand-in; licence pending): {e(w['statement'])}. Typical year {w['typical_year_kwh_m2']:,.0f} kWh/m² ({w['delta_pct']:.1f}%). Mean temperature {w['temperature_c']:.1f} °C (percentile {w['temperature_percentile']:.0f}).</p>
+<h2>Evidence</h2>{ev}
 <h2>Method and caveats</h2><p class="note">Order-independent (Shapley) attribution over a 7-switch plant simulator; unexplained = metered − simulated; 90% bands from {a['monte_carlo']['samples']} Monte Carlo runs. {' '.join(e(f) for f in a['data_quality_flags'])} Curtailment flags are not legal conclusions. Validation: {v['summary']['named_recovered']}/{v['summary']['named_causes_material']} named causes recovered; hidden cause {'in unexplained ✓' if v['hidden']['landed_in_unexplained'] else 'below detection floor' if v['hidden']['below_detection_floor'] else 'missed'}; reconciliation {'closes ✓' if v['summary']['reconciliation_closes'] else 'FAILS'}.</p>
 </body></html>"""
 

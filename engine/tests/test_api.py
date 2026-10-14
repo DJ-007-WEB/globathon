@@ -92,11 +92,27 @@ def test_report_endpoint():
     r = c.post("/api/reports/variance", json={"scenario_id": "s1", "period": "FY"})
     assert r.status_code == 200 and r.text.strip()
     assert r.headers["content-type"].startswith("text/html")
-    assert "Synthetic" in r.text and "Unexplained" in r.text
+    # 10 §1 content audit: all 12 items present in the server report
+    for marker in ("Investor variance report", "SYNTHETIC DATA", "Forecast", "Actual",
+                   "Interaction (non-additive diagnostic)", "Unexplained", "% of the total gap",
+                   "Irradiance percentile", "Evidence", "Validation:", "Method and caveats",
+                   "not legal conclusions"):
+        assert marker in r.text, marker
+    assert "nan" not in r.text.lower().replace("financing", "")  # no leaked NaNs
+    assert "None" not in r.text  # conditional None-branches (pct, evidence kwh) render cleanly
     r = c.post("/api/reports/variance", json={"scenario_id": "s1", "period": "2025-08"})
     assert r.status_code == 200 and r.text.strip()
     r = c.post("/api/reports/variance", json={"scenario_id": "nope"})
     assert r.status_code == 404 and r.json()["error"]["code"] == "UNKNOWN_SCENARIO"
+
+def test_frontend_report_template_markers():
+    # 10 §1: the print-tab template renders the same 12 items from the same object
+    src = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "app.js")).read()
+    for marker in ("Investor variance report", "SYNTHETIC DATA", "a.interaction.note",
+                   "pct_of_gap", "a.weather", "a.evidence", "<h2>Validation</h2>",
+                   "<h2>Evidence</h2>", "<h2>Weather</h2>", "numbers_checked",
+                   "window.print()", "esc("):
+        assert marker in src, marker
 
 def test_cors_origins_from_env():
     import importlib

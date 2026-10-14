@@ -137,17 +137,36 @@ def test_invalid_env_fails_with_clear_message():
         p = subprocess.run([sys.executable, "-c", "import api"], capture_output=True, text=True,
                            cwd=engine_dir, env={**os.environ, **env})
         assert p.returncode != 0 and needle in p.stderr, (env, p.returncode, p.stderr[-300:])
-
-def test_frontend_static_served_and_wired():    # 08: existing UI served intact with API/static wiring the JS expects
+def test_frontend_static_served_and_wired():
+    # 08: existing UI served intact with API/static wiring the JS expects
     r = c.get("/")
     assert r.status_code == 200 and "Variance Explainer" in r.text
-    for tab in ("analysis", "class", "valid", "report"):
+    for tab in ("overview", "analysis", "class", "valid", "report"):
         assert f'data-tab="{tab}"' in r.text
+    # landing → demo flow (additive section, existing app wrapped untouched)
+    for marker in ('id="landing"', 'id="landscen"', 'id="app" class="hide"',
+                   'id="launch"', "Launch demo"):
+        assert marker in r.text, marker
     assert 'id="apinote"' in r.text and 'id="retry"' not in r.text  # error UI is JS-rendered only
     r = c.get("/app.js")
     assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower()
+    for fn in ("enterApp", "goLanding", "fetchT"):
+        assert fn in r.text, fn
     assert "localhost" not in r.text  # no hard-coded host: same-origin api/ + data/ URLs
     r = c.get("/data/scenarios.json")
     assert r.status_code == 200 and {s["key"] for s in r.json()["scenarios"]} == {"s0", "s1", "s2", "s3"}
     r = c.get("/data/s0_FY.json")
     assert r.status_code == 200 and r.json()["reconciliation"]["closes"]
+
+def test_post_analysis_cache_and_validation_seed():
+    body = {"scenario_id": "s1", "period": "2025-08", "n_mc_samples": 2}
+    r1 = c.post("/api/analysis", json=body)
+    r2 = c.post("/api/analysis", json=body)
+    assert r1.status_code == r2.status_code == 200 and r1.json() == r2.json()
+    assert r1.json()["reproducibility_seed"] == 123
+    g = c.get("/api/validation", params={"scenario": "s3"})
+    p = c.post("/api/validation/run", json={"scenario_id": "s3"})
+    assert p.status_code == 200 and p.json() == g.json()  # default seed reproduces GET
+    q1 = c.post("/api/validation/run", json={"scenario_id": "s3", "seed": 7})
+    q2 = c.post("/api/validation/run", json={"scenario_id": "s3", "seed": 7})
+    assert q1.status_code == 200 and q1.json() == q2.json()  # seed is deterministic

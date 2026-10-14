@@ -34,5 +34,8 @@ table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:7px 8px
 .note{font-size:12.5px;color:var(--mute)}.hl{background:#fffbeb;border-left:3px solid var(--una);padding:8px 12px;border-radius:4px;font-size:13.5px}
 .btn{background:var(--acc);color:#fff;border:0;padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer}
 footer{text-align:center;color:var(--mute);font-size:12px;padding:16px}
+#landing{padding:16px 24px 40px;max-width:1320px;margin:0 auto}
+.hero h2{margin:8px 0 6px;font-size:24px}.hero .btn{margin-top:10px}
+#landscen .sc span:last-child{color:var(--acc);font-weight:700}
 .report{background:#fff;border:1px solid var(--line);padding:32px 40px;max-width:900px;margin:0 auto}.report h1{margin:0 0 4px}.report h2{font-size:16px;margin:20px 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px}
 @media print{.top,.controls,footer,.noprint{display:none!important}body{background:#fff}main{padding:0}.report{border:0;padding:0;max-width:none}.view.hide{display:none!important}}

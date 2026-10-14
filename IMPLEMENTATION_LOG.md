@@ -6,6 +6,31 @@ and next action after each phase.
 
 ---
 
+## Phase 13 — Landing → demo flow + API repeat-cache (user request)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `frontend/index.html` — new `#landing` section (hero + 3 steps + scenario
+    launch cards, all existing classes) + Overview nav button; existing app
+    wrapped in `#app.hide` untouched otherwise.
+  - `frontend/app.js` — `enterApp(scen)` / `goLanding()`; init builds landing
+    cards and defers data load until entering the demo (faster first paint, no
+    wasted compute); tab switches re-render without refetch.
+  - `frontend/style.css` — 3 new selectors only (`#landing`, `.hero`,
+    `#landscen`); zero existing rules touched.
+  - `engine/api.py` — `_post_analysis_cached` (lru_cache/32) for repeat POSTs;
+    validation `seed` now passed through (default 123 reproduces GET exactly).
+  - `engine/tests/test_api.py` — landing markers, cache-equality, seed tests.
+- Measured perf (TestClient, this machine): static FY JSON 0.18 s / 27 KB;
+  POST FY n_mc=2/10/80 → 1.1/2.1/11.8 s (MC scales linearly: 80 runs × 128
+  coalitions × 8760 h); repeat POST (cached) 3.11 s → 0.005 s, byte-equal.
+
+### Commands run + results
+- `python tests/run_tests.py` → **42/42 PASS** (one self-caught test bug fixed:
+  JS function names asserted against `/app.js`, not the HTML).
+
+---
+
 ## Phase 12 — 12_DEMO_RUNBOOK_AND_CUT_LINES.md (rehearsal + final checklist)
 
 - Date/time (UTC): 2026-10-14

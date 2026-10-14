@@ -8,12 +8,30 @@
   <div class="brand"><span class="logo">Δ</span><div><b>Variance Explainer</b><small>Why did the plant miss its forecast?</small></div></div>
   <span class="badge warn" title="Plant, weather, outages and curtailment are simulated">SYNTHETIC DATA</span>
   <nav id="tabs">
+    <button data-tab="overview">Overview</button>
     <button data-tab="analysis" class="on">Analysis</button>
     <button data-tab="class">Classification</button>
     <button data-tab="valid">Validation</button>
     <button data-tab="report">Investor report</button>
   </nav>
 </header>
+<section id="landing">
+  <div class="card hero">
+    <span class="badge warn" title="Plant, weather, outages and curtailment are simulated">SYNTHETIC DATA</span>
+    <h2>Why did the plant miss its forecast?</h2>
+    <div class="sub">Variance Explainer attributes the forecast-vs-actual gap of a synthetic 30 MWp solar plant
+      to named causes — with 90% uncertainty bands, an explicit unexplained bucket, and validation
+      against injected ground truth. Tariff ₹2.70/kWh is an assumption; curtailment flags are not legal conclusions.</div>
+    <div><button class="btn" id="launch">Launch demo</button></div>
+  </div>
+  <div class="cols">
+    <div class="card col"><h4>1 · Pick a scenario</h4><div class="note">Baseline, monsoon miss, curtailment summer or silent loss — full year or any month.</div></div>
+    <div class="card col"><h4>2 · Read the waterfall</h4><div class="note">Order-independent (Shapley) bars with 90% bands. Click any bar for its evidence.</div></div>
+    <div class="card col"><h4>3 · Check validation</h4><div class="note">Injected truth vs recovered causes; hidden losses land in Unexplained, never invented.</div></div>
+  </div>
+  <div class="card"><h3>Scenarios</h3><div class="sub">Each card opens the demo preselected. All numbers synthetic.</div><div id="landscen" class="scen"></div></div>
+</section>
+<div id="app" class="hide">
 <section class="controls">
   <div id="scen" class="scen"></div>
   <div class="periodwrap"><label>Period</label><div id="periods" class="periods"></div></div>
@@ -26,6 +44,7 @@
   <div id="view-valid" class="view hide"></div>
   <div id="view-report" class="view hide"></div>
 </main>
+</div>
 <footer>Prototype for Globathon PS 3 · All numbers synthetic · Tariff INR 2.70/kWh is an assumption · No legal conclusions on curtailment claims</footer>
 <script src="app.js"></script>
 </body></html>

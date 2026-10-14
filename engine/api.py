@@ -187,7 +187,13 @@ async def validation_ep(request):
 
 
 def _analysis_from_model(m: AnalysisRequest) -> dict:
-    return analyze(world(m.scenario_id), m.period, n_mc=m.n_mc_samples, seed=m.seed, tariff=m.tariff_inr_per_kwh)
+    return _post_analysis_cached(m.scenario_id, m.period, m.tariff_inr_per_kwh, m.seed, m.n_mc_samples)
+
+
+@functools.lru_cache(maxsize=32)
+def _post_analysis_cached(scenario_id: str, period: str, tariff: float, seed: int, n_mc: int) -> dict:
+    """Bounded cache for repeat POST analyses (JSON-serialised on send, never mutated)."""
+    return analyze(world(scenario_id), period, n_mc=n_mc, seed=seed, tariff=tariff)
 
 
 async def post_analysis(request: Request):
@@ -225,7 +231,8 @@ async def post_validation_run(request: Request):
         return _err(rid, "INVALID_VALIDATION_REQUEST", "The validation request is invalid.",
                     [{"field": ".", "reason": str(e).splitlines()[0][:200]}], 422)
     try:
-        out = validate(world(m.scenario_id))
+        a = analyze(world(m.scenario_id), "FY", seed=m.seed)
+        out = validate(world(m.scenario_id), a)
     except Exception:
         log.exception("validation failed rid=%s scenario=%s", rid, m.scenario_id)
         return _err(rid, "VALIDATION_FAILED", "Validation failed for the validated request.", [], 500)

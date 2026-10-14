@@ -23,8 +23,24 @@ const loadV = () => getJSON(`api/validation?scenario=${S.scen}`, `data/${S.scen}
 async function init() {
   try { S.useApi = (await fetchT("api/health", 5000)).ok; } catch (e) { S.useApi = false; }
   S.meta = await (await fetchT("data/scenarios.json")).json();
-  $("#tabs").onclick = e => { const b = e.target.closest("button"); if (b) { S.tab = b.dataset.tab; render(); } };
-  await refresh();
+  $("#landscen").innerHTML = S.meta.scenarios.map(s => `<button class="sc" data-k="${s.key}"><b>${esc(s.name)}</b><span>${esc(s.blurb)}</span><span><b>Open →</b></span></button>`).join("");
+  $("#landscen").onclick = e => { const b = e.target.closest(".sc"); if (b) enterApp(b.dataset.k); };
+  $("#launch").onclick = () => enterApp(S.scen);
+  $("#tabs").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.tab === "overview") { goLanding(); return; }
+    S.tab = b.dataset.tab;
+    if ($("#app").classList.contains("hide")) enterApp(); else render();
+  };
+}
+function enterApp(scen) {
+  if (scen) { S.scen = scen; S.period = "FY"; }
+  $("#landing").classList.add("hide"); $("#app").classList.remove("hide");
+  refresh();
+}
+function goLanding() {
+  $("#app").classList.add("hide"); $("#landing").classList.remove("hide");
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === "overview"));
 }
 async function refresh() {
   $("#loading").style.display = "block";

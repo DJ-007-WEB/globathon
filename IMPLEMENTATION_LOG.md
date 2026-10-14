@@ -6,6 +6,71 @@ and next action after each phase.
 
 ---
 
+## Phase 2 — 02_REPOSITORY_AUDIT_AND_EXECUTION.md (audit output + contract/fixture tests)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/tests/test_contract.py` — NEW: Phase-1 contract tests (schema, enums,
+    signs, serialized reconciliation over all 54 static JSONs, unexplained always
+    present).
+  - `engine/tests/run_tests.py` — discovers `test_engine` + `test_contract`.
+  - `02_REPOSITORY_AUDIT_AND_EXECUTION.md` — tracked (was untracked).
+
+### Required audit output (02 Phase 0 — actual, not assumed)
+- Current architecture: modular monolith. `engine/vareng/` (physics, synth,
+  attribution, validation, narrative, contract) + `engine/api.py` (Starlette,
+  4 GET routes, static mount) + `frontend/` (vanilla JS/CSS/SVG, prebuilt JSONs).
+  No DB; scenario config + time series generated deterministically on demand and
+  snapshotted to `frontend/data/*.json`. Backend suggested layout in 02 adapted to
+  existing `engine/` convention (no second app structure created).
+- Frontend entry/components: single page, 4 tabs; `#scen` scenario buttons,
+  `#periods` FY+12 month buttons; KPI cards; SVG waterfall w/ 90% whiskers;
+  evidence drawer; classification columns; validation table; printable report.
+- Backend entry/endpoints: `engine/api.py:app`; `GET /api/health|/scenarios|/analysis
+  |/validation` (+ `/` static). Cached `build_world`/`analyze` (lru_cache).
+- Chart library/design system: none installed — hand-drawn SVG; tokens in
+  `frontend/style.css :root`. Nothing to preserve-or-replace beyond leaving it alone.
+- Files proposed to add/change (rest of sequence): additive API fields/routes (03/07),
+  API tests (09), `.env.example` (11) — all without touching UI design.
+- Files explicitly protected from redesign: `frontend/index.html`, `frontend/app.js`,
+  `frontend/style.css` (visual diff = bug unless additive functional affordance).
+- Dependency gaps + rationale: FastAPI/pvlib absent (sandbox could not install;
+  Starlette+numpy used, single swappable physics module, documented in README).
+  No pytest (stdlib runner `run_tests.py` kept); no new libraries added this phase.
+- Risks/questions: (1) engine+truth share one physics model — validation proves
+  attribution/noise robustness, not physics error (disclosed in UI); (2) irradiance
+  vs model-bias weakest separation (bands show it); (3) no frontend test harness
+  (vanilla, no package.json) — E2E stays manual via runbook (12).
+
+### Phase 1–8 conformance (verified, not assumed)
+- Pydantic schemas + reconciled fixtures + contract tests: DONE this phase
+  (`contract.py` + 54 static JSONs as fixtures + 4 new contract tests).
+- Deterministic seeded series, pure `simulate()`, physics separate from API: DONE.
+- 128 coalitions cached per analysis; interaction convention documented (Shapley
+  allocates interaction; isolated+interaction view separate); residual documented;
+  order-independence + exact-reconciliation tests: DONE.
+- Seeded MC intervals, weather percentile vs 30 synthetic years, classification/
+  evidence rules, zero LLM numerics: DONE (see 05/06 for detail).
+- API validation/errors/CORS + endpoint tests: PARTIAL — 400 on bad input exists,
+  CORS/env-config + route tests deferred to 07/09/11 and recorded there.
+- Frontend: API client in existing convention + same-object report: DONE; explicit
+  fixture-fallback label + API-outage retry UI: deferred to 08.
+- Validation metrics machine-readable; report from same analysis object: DONE.
+
+### Commands run + results
+- `python tests/run_tests.py` → **14/14 PASS** (10 engine + 4 contract, the latter
+  covering all 54 `frontend/data/*.json` fixtures).
+
+### Git hygiene
+- Direct on `main` (repo has no feature-branch workflow; single-demo repo).
+- No user data deleted; no new dependencies; every changed file recorded here.
+
+### Known issues / next action
+- Next: `03_ARCHITECTURE_AND_DATA_CONTRACT.md` (canonical equation, enums, evidence
+  contract conformance).
+
+---
+
 ## Phase 1 — 01_SCOPE_AND_AGENT_RULES.md (scope conformance)
 
 - Date/time (UTC): 2026-10-14

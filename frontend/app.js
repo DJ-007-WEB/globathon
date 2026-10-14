@@ -17,11 +17,22 @@ async function getJSON(apiUrl, staticUrl) {
   if (S.useApi) { try { const r = await fetchT(apiUrl); if (r.ok) return r.json(); } catch (e) {} }
   const r = await fetchT(staticUrl); if (!r.ok) throw new Error("Cannot load " + staticUrl); return r.json();
 }
-const loadA = () => getJSON(`api/analysis?scenario=${S.scen}&period=${S.period}`, `data/${S.scen}_${S.period}.json`);
-const loadV = () => getJSON(`api/validation?scenario=${S.scen}`, `data/${S.scen}_validation.json`);
+const loadA = () => getJSON(apiUrl(`/api/analysis?scenario=${S.scen}&period=${S.period}`), `data/${S.scen}_${S.period}.json`);
+const loadV = () => getJSON(apiUrl(`/api/validation?scenario=${S.scen}`), `data/${S.scen}_validation.json`);
+// Same-origin by default (single-host deploy needs no config). For split hosting,
+// pass ?api=https://your-api once — it is remembered in localStorage. data/*.json
+// always stays same-origin: snapshots ship with the frontend.
+const API_BASE = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get("api");
+    if (q) localStorage.setItem("ve_api_base", q);
+    return (q || localStorage.getItem("ve_api_base") || "").replace(/\/$/, "");
+  } catch (e) { return ""; }
+})();
+const apiUrl = p => API_BASE ? API_BASE + p : p.replace(/^\//, "");
 
 async function init() {
-  try { S.useApi = (await fetchT("api/health", 5000)).ok; } catch (e) { S.useApi = false; }
+  try { S.useApi = (await fetchT(apiUrl("/api/health"), 5000)).ok; } catch (e) { S.useApi = false; }
   S.meta = await (await fetchT("data/scenarios.json")).json();
   $("#landscen").innerHTML = S.meta.scenarios.map(s => `<button class="sc" data-k="${s.key}"><b>${esc(s.name)}</b><span>${esc(s.blurb)}</span><span><b>Open demo →</b></span></button>`).join("");
   $("#landscen").onclick = e => { const b = e.target.closest(".sc"); if (b) enterApp(b.dataset.k); };

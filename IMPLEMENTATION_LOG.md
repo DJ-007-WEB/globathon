@@ -6,6 +6,33 @@ and next action after each phase.
 
 ---
 
+## Phase 15 — Deploy-ready: single-service Render blueprint (user request)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `render.yaml` — NEW Render blueprint (native Python 3.11.9, pip install,
+    `uvicorn api:app --app-dir engine`, health check `/api/health`, 3 env vars).
+    One URL serves API + static frontend (no CORS/split-hosting needed).
+  - `requirements.txt` — `~=` pins matching the green suite (numpy 2.5, pandas 3.0,
+    starlette 1.6, uvicorn 0.52, pydantic 2.13, httpx 0.28 test-only); scipy was
+    installed locally but imported nowhere — deliberately not added.
+  - `frontend/app.js` — optional `?api=` split-host override (localStorage
+    remembered); default stays same-origin relative URLs; `data/*.json` always
+    same-origin. No behavior change for single-host/local.
+  - `README.md` — Deployment section (blueprint steps, sleep note, split option).
+  - `engine/tests/test_api.py` — API_BASE/apiUrl markers.
+
+### Commands run + results
+- `render.yaml` parsed as YAML (start command verified).
+- `python tests/run_tests.py` → **42/42 PASS**.
+
+### Deployment note / risk
+- Code uses no 3.12+ syntax (verified by inspection), but the suite ran on 3.14
+  here — first Render build log is the confirmation for 3.11.9. If pip resolution
+  fails there, loosen pins per the build log and re-run the suite locally.
+
+---
+
 ## Phase 14 — Proper landing + in-demo differentiation (user request)
 
 - Date/time (UTC): 2026-10-14

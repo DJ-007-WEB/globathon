@@ -26,6 +26,20 @@ MAX_MONTE_CARLO_SAMPLES=200    # upper bound for POST /api/analysis n_mc_samples
 DEFAULT_TARIFF_INR_PER_KWH=2.7 # assumed tariff (per-request override is validated)
 ```
 
+## Deployment (single service, nothing local)
+
+`render.yaml` is a Render blueprint: one web service installs `requirements.txt` and runs
+`uvicorn api:app --app-dir engine`, serving the API **and** the static frontend on one URL.
+
+1. Push `main` to GitHub (done) → Render dashboard → New → Blueprint → select this repo.
+2. Render reads `render.yaml` (build/start/health check `/api/health`/env vars) → Deploy.
+3. Open the service URL: landing → Start the demo. Health: `<url>/api/health`.
+
+Notes: free-tier instances sleep when idle (first load wakes ~1 min, then cached);
+`engine/tests/run_tests.py` (42 tests) is the pre-deploy gate. Split hosting also works —
+frontend is dependency-free static files, and the app accepts `?api=https://your-api`
+once (remembered) while `data/*.json` snapshots stay same-origin.
+
 ## What is built (vs the plan doc)
 | Doc item | Status |
 |---|---|

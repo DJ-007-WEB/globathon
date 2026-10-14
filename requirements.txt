@@ -1,5 +1,8 @@
-numpy>=1.26
-pandas>=2.0
-starlette>=0.37
-uvicorn>=0.29
-pydantic>=2.5
+# Pinned to the versions the 42-test suite runs green on (numpy 2.5.3, pandas 3.0.6,
+# starlette 1.6.0, uvicorn 0.52.4, pydantic 2.13.5, httpx 0.28.1).
+numpy~=2.5
+pandas~=3.0
+starlette~=1.6
+uvicorn~=0.52
+pydantic~=2.13
+httpx~=0.28  # test client only (engine/tests/test_api.py)

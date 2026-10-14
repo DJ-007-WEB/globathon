@@ -151,7 +151,7 @@ def test_frontend_static_served_and_wired():
     assert 'id="apinote"' in r.text and 'id="retry"' not in r.text  # error UI is JS-rendered only
     r = c.get("/app.js")
     assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower()
-    for fn in ("enterApp", "goLanding", "fetchT", "rWhy"):
+    for fn in ("enterApp", "goLanding", "fetchT", "rWhy", "API_BASE", "apiUrl"):
         assert fn in r.text, fn
     assert "localhost" not in r.text  # no hard-coded host: same-origin api/ + data/ URLs
     r = c.get("/data/scenarios.json")

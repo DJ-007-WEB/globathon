@@ -27,8 +27,11 @@ def test_required_fields_enums_and_signs():
             a = json.load(f)
         for k in ("plant_id", "plant_name", "period", "forecast_kwh", "actual_kwh",
                   "gap_kwh", "tariff_inr_per_kwh", "components", "interaction",
-                  "unexplained", "weather_percentile", "data_quality_flags"):
+                  "unexplained", "weather_percentile", "data_quality_flags",
+                  "schema_version", "data_disclosure", "engine_version",
+                  "reproducibility_seed"):
             assert k in a, (p, k)
+        assert a["schema_version"] == "1.0" and a["data_disclosure"] == "Synthetic demo data"
         assert a["tariff_inr_per_kwh"] >= 0
         assert len(a["components"]) == 7
         for c in a["components"]:

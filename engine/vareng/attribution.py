@@ -180,6 +180,9 @@ def analyze(world: World, period: str = "FY", n_mc: int = N_MC, seed: int = 123)
 
     daily = _daily(world, sl, a_meas)
     out = {
+      "schema_version": "1.0",
+      "data_disclosure": "Synthetic demo data",
+      "engine_version": MODEL_VERSION, "reproducibility_seed": seed,
       "plant_id": pl.plant_id, "plant_name": pl.name, "scenario": world.scenario.key, "scenario_name": world.scenario.name,
       "period": period, "period_label": period_label(period),
       "period_start": str(world.index[sl][0]), "period_end": str(world.index[sl][-1]),

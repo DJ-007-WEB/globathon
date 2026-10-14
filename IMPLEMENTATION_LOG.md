@@ -6,6 +6,47 @@ and next action after each phase.
 
 ---
 
+## Phase 3 — 03_ARCHITECTURE_AND_DATA_CONTRACT.md (contract conformance)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/vareng/attribution.py` — every analysis response now carries 03 §2
+    envelope: `schema_version:"1.0"`, `data_disclosure:"Synthetic demo data"`,
+    `engine_version`, `reproducibility_seed`. Purely additive (frontend/Pydantic
+    ignore extras; `Analysis(**…)` in `api.py` unaffected).
+  - `engine/tests/test_contract.py` — asserts the envelope on all FY fixtures.
+  - `frontend/data/` — rebuilt (additive keys only; deep-walked s1_FY old-vs-new:
+    4 keys added, 0 removed, 0 values changed).
+  - `03_ARCHITECTURE_AND_DATA_CONTRACT.md` — tracked.
+
+### Conformance verification (all read from code)
+- Modular monolith, no DB, JSON fixtures, small interface (`build_world`/
+  `analyze`): DONE, no change.
+- Engine sole numerical truth (frontend/report/narrative never recalculate): DONE —
+  `app.js` renders API values; narrative only formats engine numbers (checker-tested).
+- Canonical equation: Shapley view `gap = Σcomponents + unexplained` exact on
+  milli-kWh ints (`U_m = gap_m − Σphi_m`, money = canonical kWh × tariff at report
+  boundary); isolated view `Σmain + interaction + U = gap` exact. Both asserted.
+  Canonical precision = milli-kWh (3 decimals) instead of spec's 6 — documented,
+  behavior identical. Interaction convention (Shapley allocates it; isolated view
+  shows diagnostic) preserved per index rule — zeroing it would break the isolated
+  waterfall the UI already renders.
+- Preserved deviations (index rule — documented, not rewritten): flat response shape
+  (no nested plant/period objects — frontend maps flat keys); short cause IDs
+  (frontend drawer/evidence/classification match on them; display labels unchanged);
+  `external` code value (UI shows "Outside operator control" via CLASS_TEXT);
+  GET query-param analysis/validation routes (frontend `getJSON` calls them).
+- Request validation: scenario/period rejected 400; tariff/seed fixed server-side
+  (not user-settable) so NaN/Inf/path rules are N/A by construction.
+
+### Commands run + results
+- `python tests/run_tests.py` → **14/14 PASS**.
+
+### Known issues / next action
+- Next: `04_DATA_AND_SYNTHETIC_SCENARIOS.md` (schema/seeds/physics-policy check).
+
+---
+
 ## Phase 2 — 02_REPOSITORY_AUDIT_AND_EXECUTION.md (audit output + contract/fixture tests)
 
 - Date/time (UTC): 2026-10-14

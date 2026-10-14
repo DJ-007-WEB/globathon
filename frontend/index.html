@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Variance Explainer – Globathon PS 3</title>
 <link rel="stylesheet" href="style.css">
-</head><body>
+</head><body class="pre-demo">
 <header class="top">
   <div class="brand"><span class="logo">Δ</span><div><b>Variance Explainer</b><small>Why did the plant miss its forecast?</small></div></div>
   <span class="badge warn" title="Plant, weather, outages and curtailment are simulated">SYNTHETIC DATA</span>
@@ -13,23 +13,35 @@
     <button data-tab="class">Classification</button>
     <button data-tab="valid">Validation</button>
     <button data-tab="report">Investor report</button>
+    <button data-tab="why">Why different</button>
   </nav>
 </header>
 <section id="landing">
   <div class="card hero">
-    <span class="badge warn" title="Plant, weather, outages and curtailment are simulated">SYNTHETIC DATA</span>
-    <h2>Why did the plant miss its forecast?</h2>
-    <div class="sub">Variance Explainer attributes the forecast-vs-actual gap of a synthetic 30 MWp solar plant
-      to named causes — with 90% uncertainty bands, an explicit unexplained bucket, and validation
-      against injected ground truth. Tariff ₹2.70/kWh is an assumption; curtailment flags are not legal conclusions.</div>
-    <div><button class="btn" id="launch">Launch demo</button></div>
+    <div class="eyebrow">GLOBATHON PS 3 · PERFORMANCE VARIANCE, EXPLAINED</div>
+    <h2>When solar output misses its forecast,<br>we show <em>why</em> — with evidence.</h2>
+    <div class="sub">Variance Explainer breaks the forecast-vs-actual gap of a 30&nbsp;MWp solar plant into named
+      causes, puts a measured band around every number, keeps the unexplained remainder visible instead of
+      hiding it, and proves the whole thing against injected ground truth.</div>
+    <div class="cta"><button class="btn-teal" id="startdemo">Start the demo</button><a class="ghost" href="#how">How it works ↓</a></div>
+    <div class="note">Prototype · 4 scenarios · FY 2025-26 + every month · fully synthetic data</div>
   </div>
-  <div class="cols">
-    <div class="card col"><h4>1 · Pick a scenario</h4><div class="note">Baseline, monsoon miss, curtailment summer or silent loss — full year or any month.</div></div>
-    <div class="card col"><h4>2 · Read the waterfall</h4><div class="note">Order-independent (Shapley) bars with 90% bands. Click any bar for its evidence.</div></div>
-    <div class="card col"><h4>3 · Check validation</h4><div class="note">Injected truth vs recovered causes; hidden losses land in Unexplained, never invented.</div></div>
+  <div class="card"><h3>What we do</h3><div class="sub">Three things, done honestly.</div>
+    <div class="cols">
+      <div class="col feat"><div class="glyph">◈</div><h4>Attribute the gap</h4><div class="note">Every MWh of the miss is assigned to a named cause — irradiance, temperature, downtime, curtailment, soiling, degradation, model bias — independent of the order causes are evaluated.</div></div>
+      <div class="col feat"><div class="glyph">◎</div><h4>Show what is unknown</h4><div class="note">The unexplained remainder gets its own bar, its own 90% band, and a verdict: within measurement noise, or a real signal asking for string-level logs and thermal scans.</div></div>
+      <div class="col feat"><div class="glyph">✓</div><h4>Prove it on truth</h4><div class="note">We generate the plant, so we know the true causes — including one deliberately hidden loss. Validation shows injected vs recovered numbers with no invented causes.</div></div>
+    </div>
   </div>
-  <div class="card"><h3>Scenarios</h3><div class="sub">Each card opens the demo preselected. All numbers synthetic.</div><div id="landscen" class="scen"></div></div>
+  <div class="card" id="how"><h3>How we do it</h3><div class="sub">Deterministic engine, no black boxes, no LLM arithmetic.</div>
+    <div class="cols">
+      <div class="col step"><div class="n">1</div><h4>Simulate</h4><div class="note">An hourly PV model builds a P50 forecast year and the measured year from sensors, logs and a meter.</div></div>
+      <div class="col step"><div class="n">2</div><h4>Attribute fairly</h4><div class="note">All 128 cause on/off coalitions are simulated; each cause gets its Shapley value — the average over all 5,040 orderings.</div></div>
+      <div class="col step"><div class="n">3</div><h4>Bound uncertainty</h4><div class="note">80 Monte Carlo runs perturb sensors, meter and calibration and recalibrate every time, giving 90% bands.</div></div>
+      <div class="col step"><div class="n">4</div><h4>Classify &amp; validate</h4><div class="note">Causes are labelled predictable, controllable, luck or outside operator control, then checked against known truth.</div></div>
+    </div>
+  </div>
+  <div class="card"><h3>Pick a scenario to begin</h3><div class="sub">Each card opens the demo preselected. All numbers synthetic.</div><div id="landscen" class="scen"></div></div>
 </section>
 <div id="app" class="hide">
 <section class="controls">
@@ -43,6 +55,7 @@
   <div id="view-class" class="view hide"></div>
   <div id="view-valid" class="view hide"></div>
   <div id="view-report" class="view hide"></div>
+  <div id="view-why" class="view hide"></div>
 </main>
 </div>
 <footer>Prototype for Globathon PS 3 · All numbers synthetic · Tariff INR 2.70/kWh is an assumption · No legal conclusions on curtailment claims</footer>

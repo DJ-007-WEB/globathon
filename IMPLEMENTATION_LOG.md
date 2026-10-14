@@ -6,6 +6,28 @@ and next action after each phase.
 
 ---
 
+## Phase 14 — Proper landing + in-demo differentiation (user request)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `frontend/index.html` — landing rebuilt (hero with what-we-do, 3 feature
+    cards, 4-step how-it-works, scenario launch cards); `body.pre-demo` hides
+    nav tabs + app chrome until demo start; new `Why different` tab + view.
+  - `frontend/app.js` — `enterApp`/`goLanding` toggle the pre-demo state;
+    new `rWhy()` explainer (differentiation table + measured optimization table
+    from the live analysis object); curly quotes removed (Windows-1252-safe reads).
+  - `frontend/style.css` — new landing selectors only, 4-color soothing palette
+    from existing tokens (paper `#f6f4ef`, ink, teal `--gain`, amber `--med`);
+    print CSS also hides landing.
+  - `engine/tests/test_api.py` — why-tab/landing markers; UTF-8 file read.
+- Palette: paper background, deep-ink text, deep teal primary/actions, amber
+  reserved for warnings/synthetic flags. No other hues introduced.
+
+### Commands run + results
+- `python tests/run_tests.py` → **42/42 PASS**.
+
+---
+
 ## Phase 13 — Landing → demo flow + API repeat-cache (user request)
 
 - Date/time (UTC): 2026-10-14

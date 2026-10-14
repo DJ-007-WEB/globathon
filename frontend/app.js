@@ -23,9 +23,9 @@ const loadV = () => getJSON(`api/validation?scenario=${S.scen}`, `data/${S.scen}
 async function init() {
   try { S.useApi = (await fetchT("api/health", 5000)).ok; } catch (e) { S.useApi = false; }
   S.meta = await (await fetchT("data/scenarios.json")).json();
-  $("#landscen").innerHTML = S.meta.scenarios.map(s => `<button class="sc" data-k="${s.key}"><b>${esc(s.name)}</b><span>${esc(s.blurb)}</span><span><b>Open →</b></span></button>`).join("");
+  $("#landscen").innerHTML = S.meta.scenarios.map(s => `<button class="sc" data-k="${s.key}"><b>${esc(s.name)}</b><span>${esc(s.blurb)}</span><span><b>Open demo →</b></span></button>`).join("");
   $("#landscen").onclick = e => { const b = e.target.closest(".sc"); if (b) enterApp(b.dataset.k); };
-  $("#launch").onclick = () => enterApp(S.scen);
+  $("#startdemo").onclick = () => enterApp(S.scen);
   $("#tabs").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.tab === "overview") { goLanding(); return; }
@@ -35,10 +35,12 @@ async function init() {
 }
 function enterApp(scen) {
   if (scen) { S.scen = scen; S.period = "FY"; }
+  document.body.classList.remove("pre-demo");
   $("#landing").classList.add("hide"); $("#app").classList.remove("hide");
   refresh();
 }
 function goLanding() {
+  document.body.classList.add("pre-demo");
   $("#app").classList.add("hide"); $("#landing").classList.remove("hide");
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === "overview"));
 }
@@ -72,7 +74,7 @@ function render() {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   document.querySelectorAll(".view").forEach(v => v.classList.add("hide"));
   $("#view-" + S.tab).classList.remove("hide");
-  ({ analysis: rAnalysis, class: rClass, valid: rValid, report: rReport })[S.tab]();
+  ({ analysis: rAnalysis, class: rClass, valid: rValid, report: rReport, why: rWhy })[S.tab]();
 }
 
 // ---------------------------------------------------------------- waterfall
@@ -201,6 +203,28 @@ function rValid() {
   ${v.rows.map(r => `<tr><td>${esc(r.cause)}</td><td>${fmt(r.truth_kwh / 1000, 1)}</td><td>${fmt(r.recovered_kwh / 1000, 1)}</td><td>${fmt(r.error_kwh / 1000, 1)}</td><td>${r.error_pct == null ? "–" : fmt(r.error_pct, 0) + "%"}</td><td>${fmt(r.lower_kwh / 1000, 0)} to ${fmt(r.upper_kwh / 1000, 0)} ${r.within_band ? "✓" : "✗"}</td><td class="${!r.material ? "na" : r.recovered ? "pass" : "fail"}">${!r.material ? "immaterial" : r.recovered ? "recovered" : "off"}</td></tr>`).join("")}
   <tr style="background:#fffbeb"><td><b>HIDDEN (unlogged) → should land in Unexplained</b></td><td>${fmt(h.truth_kwh / 1000, 1)}</td><td>${fmt(h.unexplained_kwh / 1000, 1)}</td><td>${fmt(h.error_kwh / 1000, 1)}</td><td>${h.error_pct == null ? "–" : fmt(h.error_pct, 0) + "%"}</td><td>floor ${fmt(h.detection_floor_kwh / 1000, 0)} MWh</td><td class="${h.landed_in_unexplained ? "pass" : "fail"}">${h.landed_in_unexplained ? "refused to invent a cause ✓" : h.below_detection_floor ? "too small to detect" : "missed"}</td></tr></table>
   <p class="hl">Honest reading: irradiance and forecast-model bias are the hardest to separate, because a constant irradiance-sensor bias is absorbed into the calibrated model derate. The 90% bands say so. ${esc(v.limitation)}</p></div>`;
+}
+
+// ---------------------------------------------------------------- why-different
+function rWhy() {
+  const a = S.a;
+  $("#view-why").innerHTML = `
+  <div class="card"><h3>How this is different from existing products</h3>
+   <div class="sub">Most solar dashboards show a forecast-vs-actual chart and stop. The explaining is left to spreadsheets and arguments. This prototype makes four product bets:</div>
+   <table><tr><th>Existing approach</th><th>What we do instead</th><th>Where to see it</th></tr>
+   <tr><td>Sequential waterfalls whose bars change with the order causes are listed</td><td><b>Order-independent Shapley attribution</b> — all 128 on/off coalitions simulated, averaged over all 5,040 orderings</td><td>Analysis tab → "Why order-independent?"</td></tr>
+   <tr><td>Unknown losses silently smeared across named causes or dumped in "Other"</td><td><b>Explicit unexplained bucket</b> with its own 90% band and a verdict — within noise, or a real signal with missing-data guidance</td><td>Analysis tab → hatched bar + card</td></tr>
+   <tr><td>Attribution nobody can check — no ground truth exists</td><td><b>Validation against injected truth</b>, including a deliberately hidden loss the engine must refuse to invent</td><td>Validation tab</td></tr>
+   <tr><td>LLM-generated root causes with invented numbers</td><td><b>Numbers only from the deterministic engine</b>; prose is template-rendered and machine-checked number-by-number</td><td>Investor report → "passed ✓"</td></tr></table></div>
+  <div class="card"><h3>How we keep results fast and exact</h3>
+   <div class="sub">Full-year physics at hourly resolution is expensive — one fresh analysis costs ~12 s at 80 Monte Carlo samples. The demo never pays that on the critical path:</div>
+   <table><tr><th>Technique</th><th>Effect (measured)</th></tr>
+   <tr><td><b>Prebuilt snapshots</b> — every scenario × period computed once by <span class="mono" style="display:inline">build_static.py</span></td><td>Demo loads a ~27 KB JSON in well under a second; works with no server at all</td></tr>
+   <tr><td><b>Repeat-request cache</b> on the API (32 most recent POST analyses)</td><td>Identical re-analysis drops from ~3 s to ~0.005 s with byte-equal output</td></tr>
+   <tr><td><b>Adjustable Monte Carlo knob</b> (<span class="mono" style="display:inline">n_mc_samples</span>, capped at 200)</td><td>Interactive exploration at 2–10 samples (~1–2 s); full 80-sample bands for the record</td></tr>
+   <tr><td><b>Integer milli-kWh reconciliation</b></td><td>Σ causes + unexplained = gap <b>exactly</b> — no rounding drift between headline, chart and report</td></tr>
+   <tr><td><b>Vectorised numpy core</b>, one coalition matrix per analysis, no per-hour Python loops</td><td>128 coalitions × 8,760 hours stay in seconds; FY suite benchmark prints its own timing</td></tr></table>
+   <div class="note">Current selection: ${esc(a.scenario_name)} · ${esc(a.period_label)} · gap ${sg(a.gap_kwh, 0)} (${fmt(a.gap_pct, 1)}%). All figures on this page come from the same analysis object as the charts.</div></div>`;
 }
 
 // ---------------------------------------------------------------- report

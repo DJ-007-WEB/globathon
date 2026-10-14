@@ -107,7 +107,8 @@ def test_report_endpoint():
 
 def test_frontend_report_template_markers():
     # 10 §1: the print-tab template renders the same 12 items from the same object
-    src = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "app.js")).read()
+    src = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "app.js"),
+               encoding="utf-8").read()
     for marker in ("Investor variance report", "SYNTHETIC DATA", "a.interaction.note",
                    "pct_of_gap", "a.weather", "a.evidence", "<h2>Validation</h2>",
                    "<h2>Evidence</h2>", "<h2>Weather</h2>", "numbers_checked",
@@ -141,16 +142,16 @@ def test_frontend_static_served_and_wired():
     # 08: existing UI served intact with API/static wiring the JS expects
     r = c.get("/")
     assert r.status_code == 200 and "Variance Explainer" in r.text
-    for tab in ("overview", "analysis", "class", "valid", "report"):
+    for tab in ("overview", "analysis", "class", "valid", "report", "why"):
         assert f'data-tab="{tab}"' in r.text
     # landing → demo flow (additive section, existing app wrapped untouched)
     for marker in ('id="landing"', 'id="landscen"', 'id="app" class="hide"',
-                   'id="launch"', "Launch demo"):
+                   'id="startdemo"', "Start the demo", 'class="pre-demo"'):
         assert marker in r.text, marker
     assert 'id="apinote"' in r.text and 'id="retry"' not in r.text  # error UI is JS-rendered only
     r = c.get("/app.js")
     assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower()
-    for fn in ("enterApp", "goLanding", "fetchT"):
+    for fn in ("enterApp", "goLanding", "fetchT", "rWhy"):
         assert fn in r.text, fn
     assert "localhost" not in r.text  # no hard-coded host: same-origin api/ + data/ URLs
     r = c.get("/data/scenarios.json")

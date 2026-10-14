@@ -108,3 +108,18 @@ def test_cors_origins_from_env():
     finally:
         del os.environ["FRONTEND_ORIGINS"]
         importlib.reload(api)
+
+def test_frontend_static_served_and_wired():
+    # 08: existing UI served intact with API/static wiring the JS expects
+    r = c.get("/")
+    assert r.status_code == 200 and "Variance Explainer" in r.text
+    for tab in ("analysis", "class", "valid", "report"):
+        assert f'data-tab="{tab}"' in r.text
+    assert 'id="apinote"' in r.text and 'id="retry"' not in r.text  # error UI is JS-rendered only
+    r = c.get("/app.js")
+    assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower()
+    assert "localhost" not in r.text  # no hard-coded host: same-origin api/ + data/ URLs
+    r = c.get("/data/scenarios.json")
+    assert r.status_code == 200 and {s["key"] for s in r.json()["scenarios"]} == {"s0", "s1", "s2", "s3"}
+    r = c.get("/data/s0_FY.json")
+    assert r.status_code == 200 and r.json()["reconciliation"]["closes"]

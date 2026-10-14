@@ -6,6 +6,50 @@ and next action after each phase.
 
 ---
 
+## Phase 8 — 08_FRONTEND_INTEGRATION_NO_REDESIGN.md (minimal additive UX)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `frontend/index.html` — ONE empty `<div id="apinote">` under controls.
+  - `frontend/app.js` — behavior-only: 30 s fetch timeout (`fetchT`, also on the
+    health probe); `refresh()` validates response shape and renders a
+    recoverable error card (existing `.card`/`.btn`/`.note` styles) with Retry;
+    static-fallback mode shows an explicit "Static snapshot mode" note (08 §6).
+    No style/layout/chart/navigation changes; no new dependencies.
+  - `engine/tests/test_api.py` — `test_frontend_static_served_and_wired` (index
+    tabs, JS wiring without hard-coded hosts, 4-scenario static data).
+  - `08_FRONTEND_INTEGRATION_NO_REDESIGN.md` — tracked.
+
+### Mapping audit (verified — no changes)
+- Headlines/gap/INR ← `forecast_kwh/actual_kwh/gap_kwh/gap_inr`; waterfall ←
+  7 components + interaction (isolated) + unexplained with 90% whiskers; drawer ←
+  evidence/formula/confidence/claimable; classes ← `class_label`; percentile ←
+  weather; validation ← rows/hidden/summary; report ← same `S.a` object. Tooltips
+  render API values; headline reconciliation note asserts `closes`.
+- No framework/bundler exists (vanilla) so no `VITE_*` env wiring applies —
+  same-origin relative URLs are used instead (strictly better than hard-coded
+  localhost; asserted in test). No Shapley math in the browser (pure SVG render).
+- Nothing missing: waterfall, drawer, classification, validation, report all
+  pre-existed — no new visual design invented.
+- Text/table alternatives: validation + report tables; waterfall has
+  role/aria-label. Unexplained hatched + own card (never "Other").
+
+### Visual regression
+- Before/after: identical shell/nav/tokens/charts. Only additions: error card on
+  total failure (previously an infinite spinner — a bug per 08 §6) and one note
+  line in static mode. Any broader visual change would be reverted as a bug.
+
+### Commands run + results
+- `python tests/run_tests.py` → **34/34 PASS**. JS brace/paren balance + feature
+  grep sanity check (no node available for a parse check — recorded).
+
+### Known issues / next action
+- No browser tooling in sandbox: error-card/notice rendering verified by code
+  inspection + static-serving test only; confirm visually in rehearsal (12).
+- Next: `09_VALIDATION_TESTING_AND_ACCEPTANCE.md` (gates A–E audit).
+
+---
+
 ## Phase 7 — 07_FASTAPI_BACKEND.md (routes, validation, errors, CORS, tests)
 
 - Date/time (UTC): 2026-10-14

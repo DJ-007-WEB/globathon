@@ -8,22 +8,38 @@ const lakh = inr => (inr < 0 ? "−" : "") + "₹" + fmt(Math.abs(inr) / 1e5, 1)
 const per = p => p === "FY" ? "FY 25-26" : new Date(p + "-01").toLocaleString("en", { month: "short", year: "2-digit" });
 const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
+async function fetchT(url, ms = 30000) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try { return await fetch(url, { signal: c.signal }); }
+  finally { clearTimeout(t); }
+}
 async function getJSON(apiUrl, staticUrl) {
-  if (S.useApi) { try { const r = await fetch(apiUrl); if (r.ok) return r.json(); } catch (e) {} }
-  const r = await fetch(staticUrl); if (!r.ok) throw new Error("Cannot load " + staticUrl); return r.json();
+  if (S.useApi) { try { const r = await fetchT(apiUrl); if (r.ok) return r.json(); } catch (e) {} }
+  const r = await fetchT(staticUrl); if (!r.ok) throw new Error("Cannot load " + staticUrl); return r.json();
 }
 const loadA = () => getJSON(`api/analysis?scenario=${S.scen}&period=${S.period}`, `data/${S.scen}_${S.period}.json`);
 const loadV = () => getJSON(`api/validation?scenario=${S.scen}`, `data/${S.scen}_validation.json`);
 
 async function init() {
-  try { S.useApi = (await fetch("api/health")).ok; } catch (e) { S.useApi = false; }
-  S.meta = await (await fetch("data/scenarios.json")).json();
+  try { S.useApi = (await fetchT("api/health", 5000)).ok; } catch (e) { S.useApi = false; }
+  S.meta = await (await fetchT("data/scenarios.json")).json();
   $("#tabs").onclick = e => { const b = e.target.closest("button"); if (b) { S.tab = b.dataset.tab; render(); } };
   await refresh();
 }
 async function refresh() {
   $("#loading").style.display = "block";
-  [S.a, S.v] = await Promise.all([loadA(), loadV()]);
+  try {
+    const [a, v] = await Promise.all([loadA(), loadV()]);
+    if (!a || !Array.isArray(a.components) || !a.unexplained || !v || !Array.isArray(v.rows)) throw new Error("Unexpected response shape");
+    S.a = a; S.v = v;
+  } catch (err) {
+    $("#loading").style.display = "none";
+    document.querySelectorAll(".view").forEach(x => x.classList.add("hide"));
+    const vw = $("#view-" + S.tab); vw.classList.remove("hide");
+    vw.innerHTML = `<div class="card"><h3>Could not load data</h3><div class="note">${esc(err && err.message || err)}. The API may be down and no static snapshot was found.</div><div style="margin-top:8px"><button class="btn" id="retry">Retry</button></div></div>`;
+    $("#retry").onclick = refresh;
+    return;
+  }
   S.sel = null; $("#loading").style.display = "none"; render();
 }
 function controls() {
@@ -36,6 +52,7 @@ function controls() {
 }
 function render() {
   controls();
+  $("#apinote").textContent = S.useApi ? "" : "Static snapshot mode — API unavailable; showing prebuilt engine output. All data synthetic.";
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   document.querySelectorAll(".view").forEach(v => v.classList.add("hide"));
   $("#view-" + S.tab).classList.remove("hide");

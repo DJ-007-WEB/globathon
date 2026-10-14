@@ -123,3 +123,39 @@ def test_analysis_runtime_reasonable():
     dt = time.time() - t
     print(f"  [benchmark] FY n_mc=2 analysis: {dt:.1f}s")
     assert dt < 300
+
+def test_no_truth_leakage_into_attribution():
+    # 09 §2: injected truth lives in a separate structure; corrupting it must not
+    # change analysis output (engine sees measured inputs only)
+    w = build_world("s1")
+    a1 = analyze(w, "FY", n_mc=2)
+    w.truth = {c: w.fc[c].copy() for c in CAUSES}
+    w.truth_hidden = np.ones(len(w.index))
+    w.a_true = w.a_meas.copy()
+    a2 = analyze(w, "FY", n_mc=2)
+    assert a1 == a2
+
+def test_each_switch_moves_output():
+    # 09 §4: every cause switch independently affects output (128 unique masks)
+    w = W["s1"]
+    act, a_meas, _, _ = _actual_state(w)
+    sl = _p_slice(w, "FY")
+    fc = {c: w.fc[c][sl] for c in CAUSES}; ac = {c: act[c][sl] for c in CAUSES}
+    names, kwh = ph.run_coalitions(w.plant, fc, ac, CAUSES)
+    assert kwh.shape == (2**len(CAUSES), sl.stop - sl.start)
+    f = kwh.sum(axis=1)
+    for j in range(len(CAUSES)):
+        assert f[1 << j] != f[0], CAUSES[j]
+
+def test_zero_gap_branch():
+    # 09 §4: defined behavior when the gap is zero (share undefined, no crash)
+    from vareng.attribution import _unexplained
+    u = _unexplained(0.0, 0.0, -10.0, 10.0, 50_000_000.0, 2.7)
+    assert u["pct_of_gap"] is None and u["kwh"] == 0.0
+
+def test_confidence_band_ordering():
+    # 09 §4: interval quantiles ordered on every number
+    a = analyze(W["s2"], "FY", n_mc=4)
+    for c in a["components"]:
+        assert c["lower_kwh"] <= c["upper_kwh"], c["id"]
+    assert a["unexplained"]["lower_kwh"] <= a["unexplained"]["upper_kwh"]

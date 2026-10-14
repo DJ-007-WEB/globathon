@@ -71,3 +71,17 @@ def test_evidence_ids_resolve():
             for eid in c["evidence_ids"]:
                 assert eid in by_id, (p, c["id"], eid)
                 assert by_id[eid]["cause"] == c["id"], (p, eid)
+
+def test_weather_percentile_range_and_classification_pins():
+    # 09 §4: percentile convention bounded; classification rules pinned on fixtures
+    for p in _fy_keys() + sorted(glob.glob(os.path.join(DATA, "s*_202*.json"))):
+        with open(p) as f:
+            a = json.load(f)
+        assert 0 <= a["weather_percentile"] <= 100, p
+        assert 0 <= a["weather"]["temperature_percentile"] <= 100, p
+    with open(os.path.join(DATA, "s2_FY.json")) as f:
+        down = next(c for c in json.load(f)["components"] if c["id"] == "downtime")
+    assert down["confidence"] == "high"  # directly logged cause, narrow band
+    with open(os.path.join(DATA, "s3_FY.json")) as f:
+        u = json.load(f)["unexplained"]
+    assert u["exceeds_band"] and u["kwh"] < 0  # 6% hidden loss surfaces here

@@ -6,6 +6,51 @@ and next action after each phase.
 
 ---
 
+## Phase 9 — 09_VALIDATION_TESTING_AND_ACCEPTANCE.md (gates A–E + tests)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/vareng/validation.py` — `model_version` + determinism note in output
+    (timestamp deliberately omitted: fixtures stay byte-stable; seed lives in the
+    analysis object as `reproducibility_seed`).
+  - `engine/tests/test_engine.py` — no-leakage (truth corruption changes nothing),
+    each-switch-moves-output (128 masks), zero-gap branch, band ordering.
+  - `engine/tests/test_contract.py` — percentile bounds + classification pins
+    (s2 downtime high; s3 unexplained beyond band).
+  - `frontend/data/*_validation.json` — rebuilt (additive keys only).
+  - `09_VALIDATION_TESTING_AND_ACCEPTANCE.md` — tracked.
+
+### Acceptance gates audit
+- Gate A (engine): deterministic ✓ / 7 switches covering 6 areas ✓ / 128 cached
+  coalitions ✓ / efficiency+order tests ✓ / explicit residual ✓ / finite-only ✓.
+- Gate B (API): documented routes work ✓ / stable Pydantic schema ✓ / 404+422
+  validation tested ✓ / health envelope ✓.
+- Gate C (validation): truth-vs-recovered per cause ✓ / hidden never named (TESTED:
+  lands in unexplained s1/s3, below floor s0/s2 honestly reported) / residual ✓ /
+  reconciliation ✓.
+- Gate D (frontend): design preserved ✓ / API-first with labelled static fallback ✓
+  / evidence+classification ✓ / validation visible ✓ / outage retry ✓.
+- Gate E (demo): 4 scenarios ✓ / print flow ✓ / disclosure ✓ / 3-min runbook → 12.
+
+### Layer coverage notes
+- Unit: simulator/seed/ranges ✓, switch independence ADDED, 128-mask shape ADDED,
+  Shapley toy+efficiency ✓, order ✓, interaction ✓, residual+zero-gap ADDED,
+  quantiles ADDED, percentile bounds ADDED, classification pins ADDED, evidence ✓.
+- Integration: all routes/schema/errors/CORS/client-mapping ✓ (test_api).
+- Manual/E2E: scenario trio + report + outage card + visual sameness → rehearsal 12.
+- Test commands per repo convention: `python tests/run_tests.py` (no pytest installed);
+  backend `python -m uvicorn api:app` from `engine/`; frontend has no package
+  scripts (vanilla, recorded — nothing invented).
+
+### Commands run + results
+- `python build_static.py` → only 4 validation JSONs changed (additive).
+- `python tests/run_tests.py` → **39/39 PASS** (20 engine + 6 contract + 3 physics + 10 api).
+
+### Known issues / next action
+- Next: `10_REPORTING_AND_NARRATIVE.md` (report-content audit).
+
+---
+
 ## Phase 8 — 08_FRONTEND_INTEGRATION_NO_REDESIGN.md (minimal additive UX)
 
 - Date/time (UTC): 2026-10-14

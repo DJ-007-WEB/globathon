@@ -6,6 +6,7 @@ model, so this tests attribution logic and robustness to input noise, not physic
 from __future__ import annotations
 import numpy as np
 from . import physics as ph
+from . import MODEL_VERSION
 from .physics import CAUSES
 from .attribution import analyze, CAUSE_META
 
@@ -46,6 +47,8 @@ def validate(world, analysis=None) -> dict:
                "reconciliation_closes": a["reconciliation"]["closes"],
                "mean_abs_error_pct_material": round(float(np.mean([abs(r["error_pct"]) for r in mat if r["error_pct"] is not None])), 1) if mat else None}
     return {"scenario": world.scenario.key, "scenario_name": world.scenario.name, "forecast_kwh": round(F, 1),
+            "model_version": MODEL_VERSION,
+            "note": "Deterministic fixture: no timestamp is stored so validation output is byte-stable; analysis seed is recorded in the analysis object (reproducibility_seed).",
             "true_actual_kwh": round(A_true, 1), "measured_actual_kwh": round(a["actual_kwh"], 1),
             "rows": rows, "hidden": hid, "summary": summary, "tolerance": f"recovered = within {int(TOL_REL*100)}% of truth or {TOL_ABS_FRAC*100:.1f}% of forecast",
             "limitation": "Engine and truth share one physics model, so this tests attribution logic and robustness to sensor/meter/soiling noise, not physics-model error. Real-plant validation needs real SCADA data."}

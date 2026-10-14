@@ -60,3 +60,14 @@ def test_unexplained_always_present():
         u = a["unexplained"]
         for k in ("kwh", "inr", "lower_kwh", "upper_kwh", "exceeds_band"):
             assert k in u, (p, k)
+
+def test_evidence_ids_resolve():
+    # 06 §5 / 09: every cause evidence_id resolves to an evidence record
+    for p in _fy_keys() + sorted(glob.glob(os.path.join(DATA, "s*_202*.json"))):
+        with open(p) as f:
+            a = json.load(f)
+        by_id = {e["id"]: e for e in a["evidence"]}
+        for c in a["components"]:
+            for eid in c["evidence_ids"]:
+                assert eid in by_id, (p, c["id"], eid)
+                assert by_id[eid]["cause"] == c["id"], (p, eid)

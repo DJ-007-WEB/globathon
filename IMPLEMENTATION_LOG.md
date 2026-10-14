@@ -6,6 +6,48 @@ and next action after each phase.
 
 ---
 
+## Phase 6 — 06_UNCERTAINTY_CLASSIFICATION_AND_EVIDENCE.md (conformance + test)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/tests/test_contract.py` — `test_evidence_ids_resolve` over all 54
+    fixtures (every component evidence_id resolves to a same-cause record).
+  - `06_UNCERTAINTY_CLASSIFICATION_AND_EVIDENCE.md` — tracked. No engine changes.
+
+### Conformance verification (read from code/UI, then tested)
+- MC bands: 5 perturbations incl. per-sample derate recalibration; 5–95% quantiles;
+  seeded (`seed` + period offset); sample count configurable per call (80 default,
+  documented runtime trade-off in build timings); band meaning written in UI
+  ("model/input uncertainty band"). Availability/curtailment not perturbed (directly
+  logged → covered by the directly-measured confidence rule instead). No fabricated
+  precision: bands displayed, weak separations admitted (s1/s2 irradiance±model).
+- Confidence: explicit `_confidence` rules (≤15% band, or ≤30% if directly measured
+  → high; ≤60% → medium; else low; immaterial → high) + written in UI; magnitude-
+  independent by construction (relative width). Spec's prose criteria approximated
+  by measured-vs-inferred distinction — documented.
+- Classification: model→predictable; degradation→predictable; **soiling→
+  controllable** (documented split: cleaning cadence is operator-actionable;
+  README deviations); downtime→controllable; curtailment→external + claimable flag;
+  irradiance/temperature→luck with p10–p90 extreme flag on irradiance + percentile
+  detail on temperature. Primary class + rationale shown (per-cause detail where it
+  varies, group rationale in classification tab).
+- Weather percentile: same-calendar-month(s) across 30 synthetic years, empirical
+  rank with tie-half convention, counts as stated (no "20 Julys" invention),
+  attached to irradiance, synthetic stand-in labelled.
+- Evidence: ids resolve (TESTED); windows/signals/formula/confidence/disclosure
+  present; per-cause narrowing guidance lives on the unexplained record +
+  evidence signals (adapted convention, documented).
+- Claimability: curtailment-only (TESTED), "Potentially claimable" + contract-
+  review subtext, no entitlement/legal advice/PS2 logic anywhere.
+
+### Commands run + results
+- `python tests/run_tests.py` → **24/24 PASS**.
+
+### Known issues / next action
+- Next: `07_FASTAPI_BACKEND.md` (routes/CORS/errors + endpoint tests).
+
+---
+
 ## Phase 5 — 05_ENGINE_AND_ATTRIBUTION.md (engine conformance + tests)
 
 - Date/time (UTC): 2026-10-14

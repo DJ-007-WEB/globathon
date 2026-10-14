@@ -1,0 +1,50 @@
+import sys, os, numpy as np
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from vareng import physics as ph
+from vareng.synth import build_world
+from vareng.attribution import analyze, _p_slice, _actual_state, _core
+from vareng.narrative import check_numbers
+from vareng.validation import validate
+
+W = {k: build_world(k) for k in ("s1", "s2", "s3")}
+
+def test_shapley_efficiency_and_additivity_toy():
+    f = np.array([0, 3, 5, 12.0])     # 2 players, value of {} {1} {2} {1,2}
+    phi = ph.shapley_from_values(f, 2)
+    assert abs(phi.sum() - 12) < 1e-12 and abs(phi[0] - 5) < 1e-12 and abs(phi[1] - 7) < 1e-12
+
+def test_reconciliation_closes_exactly_every_scenario_and_period():
+    for k, w in W.items():
+        for p in ("FY", "2025-07", "2026-03"):
+            a = analyze(w, p, n_mc=4)
+            r = a["reconciliation"]
+            assert r["closes"] and r["residual_milli_kwh"] == 0 and r["isolated_view_closes"]
+            tot = sum(round(c["kwh"]*1000) for c in a["components"]) + round(a["unexplained"]["kwh"]*1000)
+            assert tot == round(a["gap_kwh"]*1000)
+
+def test_unexplained_independent_definition():
+    w = W["s3"]; a = analyze(w, "FY", n_mc=4)
+    act, a_meas, _, _ = _actual_state(w); c = _core(w, act, a_meas, _p_slice(w, "FY"))
+    assert abs((c["A"] - c["sim_all"]) - a["unexplained"]["kwh"]) < 0.01
+
+def test_order_independence():
+    a = analyze(W["s1"], "FY", n_mc=4)
+    assert a["sequential_demo"]["max_order_swing_kwh"] > 1000      # a naive waterfall depends on order
+    assert a["sequential_demo"]["total_same"]
+
+def test_hidden_cause_not_misassigned_when_large():
+    v = validate(W["s3"]); assert v["hidden"]["landed_in_unexplained"] and v["summary"]["reconciliation_closes"]
+
+def test_no_hidden_cause_means_small_unexplained():
+    w = build_world("s3"); w.a_meas = w.a_meas / np.where(w.truth_hidden < 1, w.truth_hidden, 1)  # remove the hidden loss from "measured"
+    a = analyze(w, "FY", n_mc=10)
+    assert abs(a["unexplained"]["kwh"]) < 0.01*a["forecast_kwh"]
+
+def test_narrative_numbers_match_engine():
+    for w in W.values():
+        a = analyze(w, "FY", n_mc=4); assert a["narrative"]["numbers_checked"], a["narrative"]["unmatched_numbers"]
+    ok, bad = check_numbers("It lost 999,999 MWh", {"1"}); assert not ok
+
+def test_physics_sane():
+    w = W["s1"]; assert 0 < w.fc["irradiance"].max() < 1300
+    assert w.a_true.max() <= w.plant.ac_cap_kw + 1e-6

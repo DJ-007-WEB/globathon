@@ -77,26 +77,30 @@ def build_availability(index, events, rng):
     n = len(index); down = np.zeros(n)
     ev_out = []
     pos = pd.Series(np.arange(n), index=index)
-    for e in events:
+    for i, e in enumerate(events):
         sl = pos[e["start"]:e["end"]].values
         down[sl] += e["n_down"]
-        ev_out.append({**e, "kind": "outage", "logged": True})
+        ev_out.append({**e, "event_id": f"outage-{i+1:03d}", "kind": "outage", "logged": True})
     # micro-trips: ~3/month, 1 inverter, 1-3 h
+    trip_n = 0
     for mth in range(12):
         lo = mth*730; hi = min(lo+730, n)
         for _ in range(rng.integers(2, 5)):
             st = int(rng.integers(lo+7, hi-4)); du = int(rng.integers(1, 4))
             down[st:st+du] += 1
-            ev_out.append({"start": str(index[st]), "end": str(index[min(st+du-1, n-1)]),
+            trip_n += 1
+            ev_out.append({"event_id": f"trip-{trip_n:03d}",
+                           "start": str(index[st]), "end": str(index[min(st+du-1, n-1)]),
                            "n_down": 1, "label": "Inverter trip", "kind": "trip", "logged": True})
     avail = np.clip(1 - down/Plant().n_inverters, 0, 1)
     return avail, ev_out
 
 def build_setpoint(index, windows):
     sp = np.full(len(index), BIG); pos = pd.Series(np.arange(len(index)), index=index)
-    for w in windows:
+    for i, w in enumerate(windows):
         sl = pos[w["start"]:w["end"]].values
         sp[sl] = np.minimum(sp[sl], w["limit_frac"]*Plant().ac_cap_kw)
+        w["event_id"] = f"curtail-{i+1:03d}"
     return sp
 
 def build_hidden(index, geom, start, loss):
@@ -260,5 +264,18 @@ def build_world(key: str) -> World:
         "Curtailment profile is illustrative, shaped like reported 2026 patterns.",
     ]
     logs = {"outages": ev, "curtailment": cw, "cleaning": sc.cleaning, "missing_irradiance_hours": int(miss.sum())}
+    _check_schema(index, avail_true, sp_true, soil_true, deg_true, ghi_true, ghi_meas, t_true, a_true, a_meas)
     return World(sc, plant, index, geom, fc, truth, hidden, meas, a_meas, a_true,
                  ghi_meas, ghi_fc, ghi_true, logs, flags, hist)
+
+def _check_schema(index, avail, sp, soil, deg, ghi_true, ghi_meas, t_true, a_true, a_meas):
+    """04 §5 schema checks: units, missing values, ranges and time order."""
+    assert len(index) == N_HOURS and index.is_monotonic_increasing
+    assert (np.diff(index.values).astype("timedelta64[h]").astype(int) == 1).all()
+    assert np.all((avail >= 0) & (avail <= 1)), "availability_fraction in [0,1]"
+    assert np.all((soil >= 0) & (soil < 0.5)), "soiling_loss_fraction in [0,0.5)"
+    assert np.all((deg >= 0) & (deg < 1)), "degradation_fraction in [0,1)"
+    assert np.all(sp > 0), "export setpoint cap positive"
+    for name, arr in (("ghi_true", ghi_true), ("ghi_meas", ghi_meas), ("t_true", t_true),
+                      ("a_true", a_true), ("a_meas", a_meas)):
+        assert np.all(np.isfinite(arr)) and np.all(arr >= 0), name

@@ -6,6 +6,51 @@ and next action after each phase.
 
 ---
 
+## Phase 4 — 04_DATA_AND_SYNTHETIC_SCENARIOS.md (data-layer conformance)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/vareng/synth.py` — deterministic event IDs on all log events
+    (`outage-NNN`, `trip-NNN`, `curtail-NNN`, §7) + `_check_schema()` range/unit/
+    order asserts in `build_world` (§5: availability∈[0,1], soiling∈[0,0.5),
+    degradation∈[0,1), positive setpoint, finite non-negative series, 8760 hourly
+    monotonic steps).
+  - `engine/tests/test_physics.py` — NEW: clear-sky/ERBS/cap sanity (always runs)
+    + pvlib Haurwitz cross-check within 10% when pvlib installed, skipped otherwise
+    (makes the `physics.py` "tests/test_physics.py cross-checks" docstring true).
+  - `engine/tests/run_tests.py` — discovers `test_physics`.
+  - `04_DATA_AND_SYNTHETIC_SCENARIOS.md` — tracked.
+
+### Conformance verification
+- Hourly 8760 (§2 preferred) with monthly aggregation after modelling: DONE.
+- Schema fields: curtailment as export-cap kW (equivalent mechanism to a fraction —
+  documented); wind fixed 2.0 m/s in Faiman model (optional field, documented);
+  all other §2 fields present incl. flags + event logs.
+- Plant story (30 MWp, Jodhpur-region-shaped, never claimed measured), 10-inverter
+  deterministic logs, ₹2.70 assumption: DONE.
+- Scenario trio + hidden cause: DONE (s0 baseline / s1 operational / s2 curtailment-
+  heavy / s3 silent-loss; hidden loss in every scenario incl. s0=0 control).
+- Seeded generation, no import-time randomness, separated weather/events/simulate:
+  DONE. Schema checks: ADDED this phase. No large data files committed beyond the
+  small static JSON snapshots.
+- pvlib policy (§6): simplified model clearly named + limitations documented
+  (README + physics docstring + validation limitation); cross-check test ADDED.
+  Pipeline steps + no double-application of losses: verified in `simulate()`.
+- Evidence from logs via counterfactuals (never copied truth): DONE; hidden cause
+  has no log/event/evidence entry by construction.
+- External data: none used/needed; 30 synthetic years labelled as ERA5 stand-in
+  with licence check pending (UI + flags).
+
+### Commands run + results
+- `python tests/run_tests.py` → **17/17 PASS** (10 engine + 4 contract + 3 physics).
+- No static rebuild: log/schema changes do not enter analysis output (verified —
+  `git status` shows no `frontend/data` drift).
+
+### Known issues / next action
+- Next: `05_ENGINE_AND_ATTRIBUTION.md` (counterfactual/Shapley/interaction tests).
+
+---
+
 ## Phase 3 — 03_ARCHITECTURE_AND_DATA_CONTRACT.md (contract conformance)
 
 - Date/time (UTC): 2026-10-14

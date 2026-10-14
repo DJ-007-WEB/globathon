@@ -6,6 +6,68 @@ and next action after each phase.
 
 ---
 
+## Phase 1 — 01_SCOPE_AND_AGENT_RULES.md (scope conformance)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/vareng/synth.py` — added `s0` Baseline scenario (the required
+    baseline/operational/curtailment trio was missing its near-closed baseline).
+  - `engine/vareng/attribution.py` — `_sequential` reuses `_core` phi (no double
+    Shapley compute) and rounds informational demo floats to canonical 3-decimal
+    precision per 03 §4 (byte-stable static builds).
+  - `engine/tests/test_engine.py` — added `test_same_seed_deterministic` (01 DoD)
+    and `test_baseline_near_closed`.
+  - `frontend/data/` — 14 new `s0_*` JSONs + regenerated `scenarios.json`;
+    recommitted s1–s3 JSONs (only change: `sequential_demo` rounding; all canonical
+    numbers bit-identical, UI displays at 0.1 MWh so no visible change).
+  - `01_SCOPE_AND_AGENT_RULES.md` — tracked (was untracked).
+
+### Must-implement verification (all checked against code, none assumed)
+- [x] 30 MWp synthetic plant (`Plant.pdc0_kw=30_000`, dataclass-configurable).
+- [x] 12-month FY + scenarios: **added s0 Baseline** (gap +0.17% FY, unexplained
+  −2.5 MWh within band, hidden truth 0, `below_detection_floor=true`); s1 =
+  operational underperformance; s2 = curtailment-heavy; s3 = hidden-cause demo.
+- [x] Forecast/actual/gap/tariff ₹2.70/INR impact in every analysis object.
+- [x] Six cause areas covered (7 switches: soiling/degradation split with documented
+  controllable-vs-predictable rationale; deviation preserved per index rule).
+- [x] Shapley attribution (2^7=128 coalitions), interaction line, explicit unexplained.
+- [x] Monte Carlo bands (80 runs, documented perturbations).
+- [x] Classification/evidence/confidence/weather percentile; Pydantic contract
+  (Starlette, not FastAPI — preserved convention, documented).
+- [x] Validation endpoint+page; printable investor report; 8→10 tests.
+- [x] Out-of-scope absent: grepped engine+frontend for auth/chatbot/login/settlement-
+  engine/role-views/mobile/ML/SCADA-integration — only legitimate user-facing words
+  ("settlement meter", "real SCADA data") found, no such features.
+- [x] Demo disclosure: SYNTHETIC DATA badge/footer/flags/report; curtailment wording
+  "Potentially claimable — contract review required", never a legal conclusion.
+
+### Frontend baseline capture (§4, before any edits — none made to UI)
+- Routes: single `frontend/index.html`, 4 tabs (Analysis/Classification/Validation/
+  Investor report), no router. No `package.json`/bundler (vanilla JS+CSS, no
+  dependencies to churn). Tokens: `frontend/style.css` `:root` vars (no global change).
+  Charts: hand-drawn SVG in `app.js` (no chart library to replace). No screenshots
+  (no browser tooling in sandbox); textual baseline above serves as record.
+
+### Commands run + results
+- `python tests/run_tests.py` → **10/10 PASS** (8 existing + determinism + baseline).
+- `python build_static.py` → s0 20.8s, s1 20.0s, s2 26.3s, s3 21.1s; s1–s3 canonical
+  numbers verified bit-identical to committed files (deep JSON walk: only intended
+  `sequential_demo` rounding differs).
+- Determinism proof: two `analyze(w,'FY',n_mc=4)` runs equal on gap/components/
+  unexplained/narrative; rebuilds byte-stable.
+
+### Assumptions / deviations (preserved per index rule, not rewritten)
+- 7 switches vs six (split documented in README); Starlette vs FastAPI; numpy physics
+  vs pvlib (single swappable module); interaction shown in isolated view only.
+- Baseline monthly gaps swing with weather (e.g. Aug +20% on seed-44 monsoon draw);
+  the "near-closed" claim is FY-level (+0.17%), which is what the scenario is for.
+
+### Known issues / next action
+- None blocking. Next: `02_REPOSITORY_AUDIT_AND_EXECUTION.md` (Phase 1 contract/
+  fixture requirements vs existing `contract.py` + static JSONs).
+
+---
+
 ## Phase 0 — README_IMPLEMENTATION_INDEX.md (master plan intake + repo audit)
 
 - Date/time (UTC): 2026-10-14

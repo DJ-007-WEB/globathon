@@ -193,7 +193,7 @@ def analyze(world: World, period: str = "FY", n_mc: int = N_MC, seed: int = 123)
                          "isolated_view_closes": (sum(main_m) + inter_m + U_m == gap_m)},
       "calibration": {"derate_forecast": pl.fc_derate, "derate_calibrated": round(d_cal, 5),
                       "hours_used": n_cal, "window": f"{world.index[0].date()} to {world.index[CAL_HOURS-1].date()}"},
-      "sequential_demo": _sequential(core["f"]),
+      "sequential_demo": _sequential(core["f"], core["phi"]),
       "evidence": ev, "daily": daily, "monte_carlo": {"samples": n_mc, "band": f"{P_LO}-{P_HI}%",
           "perturbed": "irradiance sensor bias (sd 1.0%), ambient temp offset (sd 0.8 degC), soiling-station offset (sd 0.4 pts), flash-test error (sd 0.1 pts), meter (sd 0.3%); derate recalibrated each sample"},
       "model_version": MODEL_VERSION,
@@ -242,7 +242,7 @@ def _unexplained(U, gap, lo, hi, F, tar):
             "confidence": "low" if (excl and material) else "medium",
             "formula": "U = measured actual - simulated actual (all causes on). Reconciliation: sum(causes) + U = gap."}
 
-def _sequential(f):
+def _sequential(f, phi=None):
     """Show that a plain sequential waterfall depends on the order causes are listed in."""
     n = len(CAUSES)
     def run(order):
@@ -251,10 +251,14 @@ def _sequential(f):
             out[CAUSES[c]] = float(f[S | (1 << c)] - f[S]); S |= (1 << c)
         return out
     fwd = run(list(range(n))); rev = run(list(range(n))[::-1])
-    phi = ph.shapley_from_values(f, n)
-    rows = [{"id": c, "label": CAUSE_META[c]["label"], "listed_first": fwd[c], "listed_last": rev[c], "shapley": float(phi[j]),
-             "order_swing_kwh": abs(fwd[c] - rev[c])} for j, c in enumerate(CAUSES)]
-    return {"rows": rows, "max_order_swing_kwh": max(r["order_swing_kwh"] for r in rows),
+    if phi is None:
+        phi = ph.shapley_from_values(f, n)
+    # Canonical precision (03/05): round informational floats so static builds are
+    # byte-stable across processes (BLAS reduction order varies at ~1e-10).
+    r3 = lambda x: round(float(x), 3)
+    rows = [{"id": c, "label": CAUSE_META[c]["label"], "listed_first": r3(fwd[c]), "listed_last": r3(rev[c]), "shapley": r3(phi[j]),
+             "order_swing_kwh": r3(abs(fwd[c] - rev[c]))} for j, c in enumerate(CAUSES)]
+    return {"rows": rows, "max_order_swing_kwh": r3(max(r["order_swing_kwh"] for r in rows)),
             "total_same": bool(abs(sum(fwd.values()) - sum(rev.values())) < 1e-6)}
 
 def _daily(world, sl, a_meas):

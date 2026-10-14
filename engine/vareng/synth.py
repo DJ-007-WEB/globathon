@@ -136,7 +136,14 @@ def _clean_every(days, start="2025-04-10", end="2026-03-31", skip=()):
     return [str(d.date()) for d in pd.date_range(start, end, freq=f"{days}D") if str(d.date()) not in skip]
 
 SCENARIOS = {
- "s1": Scenario("s1", "Monsoon Miss",
+ "s0": Scenario("s0", "Baseline",
+    "Near-normal weather, high availability, negligible curtailment - near-closed result.",
+    seed=44,
+    outages=[],
+    curtail="light", cleaning=_clean_every(24, "2025-04-08", "2026-03-31"),
+    hidden_start="2026-01-01", hidden_loss=0.0, derate_true=0.968, deg_true_per_year=0.005,
+    ghi_bias=0.002, temp_bias=0.1),
+  "s1": Scenario("s1", "Monsoon Miss",
     "Very weak monsoon irradiance, a delayed pre-monsoon cleaning, a 9-day two-inverter outage.",
     seed=11, weather_scale={"2025-07": 0.80, "2025-08": 0.78},
     outages=[{"start": "2025-08-12 06:00", "end": "2025-08-20 18:00", "n_down": 2, "label": "Inverter bank 3-4 transformer fault"}],

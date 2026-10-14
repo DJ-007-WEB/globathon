@@ -48,3 +48,20 @@ def test_narrative_numbers_match_engine():
 def test_physics_sane():
     w = W["s1"]; assert 0 < w.fc["irradiance"].max() < 1300
     assert w.a_true.max() <= w.plant.ac_cap_kw + 1e-6
+
+def test_same_seed_deterministic():
+    # 01 DoD: same scenario/configuration produces deterministic output
+    w = build_world("s1")
+    a1 = analyze(w, "FY", n_mc=4); a2 = analyze(w, "FY", n_mc=4)
+    assert a1["gap_kwh"] == a2["gap_kwh"] and a1["components"] == a2["components"]
+    assert a1["unexplained"] == a2["unexplained"] and a1["narrative"] == a2["narrative"]
+
+def test_baseline_near_closed():
+    # 01: baseline scenario shows a near-closed result with small residual
+    w = build_world("s0")
+    a = analyze(w, "FY", n_mc=10)
+    assert abs(a["gap_pct"]) < 2.0
+    assert abs(a["unexplained"]["kwh"]) < 0.01*a["forecast_kwh"]
+    assert not a["unexplained"]["exceeds_band"]
+    assert a["reconciliation"]["closes"]
+    assert len(a["components"]) == 7

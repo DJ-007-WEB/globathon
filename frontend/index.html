@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Variance Explainer – Globathon PS 3</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header class="top">
+  <div class="brand"><span class="logo">Δ</span><div><b>Variance Explainer</b><small>Why did the plant miss its forecast?</small></div></div>
+  <span class="badge warn" title="Plant, weather, outages and curtailment are simulated">SYNTHETIC DATA</span>
+  <nav id="tabs">
+    <button data-tab="analysis" class="on">Analysis</button>
+    <button data-tab="class">Classification</button>
+    <button data-tab="valid">Validation</button>
+    <button data-tab="report">Investor report</button>
+  </nav>
+</header>
+<section class="controls">
+  <div id="scen" class="scen"></div>
+  <div class="periodwrap"><label>Period</label><div id="periods" class="periods"></div></div>
+</section>
+<main>
+  <div id="loading" class="loading">Loading…</div>
+  <div id="view-analysis" class="view"></div>
+  <div id="view-class" class="view hide"></div>
+  <div id="view-valid" class="view hide"></div>
+  <div id="view-report" class="view hide"></div>
+</main>
+<footer>Prototype for Globathon PS 3 · All numbers synthetic · Tariff INR 2.70/kWh is an assumption · No legal conclusions on curtailment claims</footer>
+<script src="app.js"></script>
+</body></html>

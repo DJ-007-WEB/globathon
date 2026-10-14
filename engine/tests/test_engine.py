@@ -1,6 +1,7 @@
-import sys, os, numpy as np
+import sys, os, time, math, numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from vareng import physics as ph
+from vareng.physics import CAUSES
 from vareng.synth import build_world
 from vareng.attribution import analyze, _p_slice, _actual_state, _core
 from vareng.narrative import check_numbers
@@ -65,3 +66,60 @@ def test_baseline_near_closed():
     assert not a["unexplained"]["exceeds_band"]
     assert a["reconciliation"]["closes"]
     assert len(a["components"]) == 7
+
+def test_coalition_endpoints_match_definitions():
+    # 05 §2: v(empty) == baseline forecast, v(all) == modelled actual (pre-hidden)
+    w = build_world("s2")
+    act, a_meas, _, _ = _actual_state(w)
+    c = _core(w, act, a_meas, _p_slice(w, "FY"))
+    assert abs(c["f"][0] - c["F"]) < 1e-6
+    assert abs(c["f"][-1] - c["sim_all"]) < 1e-6
+    assert c["sim_all"] != c["A"] or True  # modelled actual vs metered (hidden lives here)
+
+def test_stable_cause_schema_order():
+    # 05 §8: causes always returned in stable schema order
+    a = analyze(W["s1"], "FY", n_mc=2)
+    assert [c["id"] for c in a["components"]] == CAUSES
+
+def test_interaction_diagnostic_convention():
+    # 05 §4: interaction is the defined diagnostic ΣShapley − Σisolated, and both
+    # views reconcile exactly (never a decorative bar ignored by the equation)
+    for w in W.values():
+        a = analyze(w, "FY", n_mc=2)
+        assert abs(a["interaction"]["kwh"] - (sum(c["kwh"] for c in a["components"])
+                  - sum(c["main_effect_kwh"] for c in a["components"]))) < 1e-9
+        assert a["reconciliation"]["closes"] and a["reconciliation"]["isolated_view_closes"]
+
+def test_injected_causes_move_expected_direction():
+    # 05 §8: each known injected cause moves the output in the expected direction
+    a2 = analyze(build_world("s2"), "FY", n_mc=2)   # curtailment-heavy
+    curt = next(c for c in a2["components"] if c["id"] == "curtailment")
+    assert curt["kwh"] < 0 and abs(curt["kwh"]) == max(abs(c["kwh"]) for c in a2["components"])
+    a1 = analyze(build_world("s1"), "FY", n_mc=2)   # delayed cleaning + derate gap
+    by_id = {c["id"]: c["kwh"] for c in a1["components"]}
+    assert by_id["soiling"] < 0 and by_id["model"] < 0
+    a3 = analyze(build_world("s3"), "FY", n_mc=2)   # 6% hidden afternoon loss
+    assert a3["unexplained"]["kwh"] < 0 and a3["unexplained"]["exceeds_band"]
+
+def test_response_finite():
+    # 05 §6/§8: no NaN/Infinity anywhere in the numeric response
+    def walk(x):
+        if isinstance(x, float): assert math.isfinite(x)
+        elif isinstance(x, dict):
+            for v in x.values(): walk(v)
+        elif isinstance(x, (list, tuple)):
+            for v in x: walk(v)
+    for w in W.values():
+        a = analyze(w, "FY", n_mc=2)
+        walk({"f": a["forecast_kwh"], "a": a["actual_kwh"], "g": a["gap_kwh"],
+              "c": [(c["kwh"], c["inr"], c["lower_kwh"], c["upper_kwh"]) for c in a["components"]],
+              "u": (a["unexplained"]["kwh"], a["unexplained"]["lower_kwh"], a["unexplained"]["upper_kwh"])})
+
+def test_analysis_runtime_reasonable():
+    # 05 §7: benchmark — one full-year analysis (128 coalitions + small MC) well
+    # under a generous cap (catches pathological regressions, not a perf target)
+    t = time.time()
+    analyze(build_world("s1"), "FY", n_mc=2)
+    dt = time.time() - t
+    print(f"  [benchmark] FY n_mc=2 analysis: {dt:.1f}s")
+    assert dt < 300

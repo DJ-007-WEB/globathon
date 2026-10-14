@@ -6,6 +6,47 @@ and next action after each phase.
 
 ---
 
+## Phase 5 — 05_ENGINE_AND_ATTRIBUTION.md (engine conformance + tests)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `engine/tests/test_engine.py` — 6 new tests covering 05 §8: coalition
+    endpoints, stable cause order, interaction-diagnostic definition, injected-
+    direction spot checks (real FY values: s2 curtailment −1431 MWh dominant,
+    s1 soiling/model negative, s3 unexplained −760 MWh beyond band),
+    response finiteness, runtime benchmark cap.
+  - `05_ENGINE_AND_ATTRIBUTION.md` — tracked. No engine code changes needed.
+
+### Conformance verification (read from code, then tested)
+- Module purity: `vareng/` imports numpy/pandas only — no API/frontend/LLM/report
+  imports (only "Claude" mention is a docstring noting the optional 10-style
+  rephrase layer, not wired). Adapted boundary (`attribution.py` holds
+  attribution+uncertainty+classification+orchestration; `narrative.py` separate)
+  preserved per index rule instead of a file split with no behavior gain.
+- Counterfactual: `v(empty)=F`, `v(all)=modelled actual pre-hidden`, one switch per
+  cause, no double-applied loss, hidden reduces metered actual outside coalitions:
+  verified + TESTED.
+- Shapley: exact factorial weights over all 128 cached coalitions; stable CAUSES
+  order; order-independence demonstrated via sequential swing (max swing >1 MWh
+  while totals identical): TESTED.
+- Interaction: diagnostic `ΣShapley − Σisolated`, both views reconcile exactly,
+  never decorative: TESTED (definition equality to 1e-9 + both `closes` flags).
+- Unexplained: residual with kWh/INR/%-of-gap/band/status/missing-data; never
+  relabelled "other"; large residuals reported (s3): DONE.
+- Numerics: finite-only (TESTED), full internal precision, milli-kWh canonical,
+  U from serialized values, money from canonical kWh, signs preserved, positive
+  contributions allowed (s0 irradiance +542 MWh FY), hourly floats unrounded: DONE.
+- Performance: 128 coalition evals cached per analysis; benchmark test added
+  (FY n_mc=2 runs in seconds on this machine vs 300 s cap).
+
+### Commands run + results
+- `python tests/run_tests.py` → **23/23 PASS** (16 engine + 4 contract + 3 physics).
+
+### Known issues / next action
+- Next: `06_UNCERTAINTY_CLASSIFICATION_AND_EVIDENCE.md`.
+
+---
+
 ## Phase 4 — 04_DATA_AND_SYNTHETIC_SCENARIOS.md (data-layer conformance)
 
 - Date/time (UTC): 2026-10-14

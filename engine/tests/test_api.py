@@ -125,8 +125,20 @@ def test_cors_origins_from_env():
         del os.environ["FRONTEND_ORIGINS"]
         importlib.reload(api)
 
-def test_frontend_static_served_and_wired():
-    # 08: existing UI served intact with API/static wiring the JS expects
+def test_invalid_env_fails_with_clear_message():
+    # 11 §2: bad startup config fails fast with a clear message, no traceback leak needed
+    import subprocess
+    cases = (({"MAX_MONTE_CARLO_SAMPLES": "0"}, "Invalid MAX_MONTE_CARLO_SAMPLES"),
+             ({"MAX_MONTE_CARLO_SAMPLES": "x"}, "Invalid MAX_MONTE_CARLO_SAMPLES"),
+             ({"DEFAULT_TARIFF_INR_PER_KWH": "-1"}, "Invalid DEFAULT_TARIFF_INR_PER_KWH"),
+             ({"FRONTEND_ORIGINS": " , "}, "Invalid FRONTEND_ORIGINS"))
+    engine_dir = os.path.join(os.path.dirname(__file__), "..")
+    for env, needle in cases:
+        p = subprocess.run([sys.executable, "-c", "import api"], capture_output=True, text=True,
+                           cwd=engine_dir, env={**os.environ, **env})
+        assert p.returncode != 0 and needle in p.stderr, (env, p.returncode, p.stderr[-300:])
+
+def test_frontend_static_served_and_wired():    # 08: existing UI served intact with API/static wiring the JS expects
     r = c.get("/")
     assert r.status_code == 200 and "Variance Explainer" in r.text
     for tab in ("analysis", "class", "valid", "report"):

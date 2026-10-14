@@ -6,6 +6,40 @@ and next action after each phase.
 
 ---
 
+## Phase 11 — 11_ENVIRONMENT_DEPLOYMENT_AND_SECURITY.md (config + safety audit)
+
+- Date/time (UTC): 2026-10-14
+- Files changed:
+  - `.env.example` — NEW: exactly the 3 vars `api.py` reads (origins, MC cap,
+    default tariff), placeholders only, no secrets.
+  - `engine/api.py` — `_env_config()` validates ranges at startup with clear
+    `RuntimeError` messages (no full-env logging anywhere).
+  - `engine/tests/test_api.py` — invalid-env subprocess test (4 bad configs fail
+    with the documented message).
+  - `README.md` — short Configuration section (11 §4 exact-commands note).
+  - `11_ENVIRONMENT_DEPLOYMENT_AND_SECURITY.md` — tracked.
+
+### Safety audit (verified, not assumed)
+- Secrets: `.env` gitignored (`!.env.example` kept); repo-wide scan for
+  api_key/secret/passwd/private-key hits prose-only in spec/log docs — zero
+  credentials in code, frontend, logs, or reports. No credentials requested.
+- Inputs: Pydantic bounds on scenario/period/tariff/seed/n_mc + 404/422 TESTED;
+  period enum bounds analysis length; no file paths/uploads accepted; static
+  mount serves only `frontend/`; report values escaped both sides; CORS from env
+  TESTED; error envelope never carries stack traces TESTED.
+- Local/dev/deploy: README commands match repo layout (`engine/` uvicorn, static
+  frontend, `build_static.py`, `run_tests.py`); no DB/queue added; health check
+  present; deterministic scenarios; Docker deliberately skipped (no existing setup
+  to preserve, local+static demo suffices — recorded cut).
+
+### Commands run + results
+- `python tests/run_tests.py` → **41/41 PASS**.
+
+### Known issues / next action
+- Next (last): `12_DEMO_RUNBOOK_AND_CUT_LINES.md` — full demo rehearsal + checklist.
+
+---
+
 ## Phase 10 — 10_REPORTING_AND_NARRATIVE.md (12-item report audit)
 
 - Date/time (UTC): 2026-10-14

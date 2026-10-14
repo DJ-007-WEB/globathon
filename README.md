@@ -15,6 +15,17 @@ python tests/run_tests.py             # 8 tests incl. exact reconciliation
 No server? Frontend works from any static host (`frontend/`, e.g. Vercel) because results are pre-built in `frontend/data/`.
 Investor PDF: open the *Investor report* tab → Print / Save as PDF (sample in `sample_reports/`).
 
+## Configuration (optional)
+
+Only three env vars exist (see `.env.example`); all have safe defaults so `uvicorn api:app`
+runs with no setup. No secrets or credentials are required — the prototype is fully synthetic.
+
+```bash
+FRONTEND_ORIGINS=*             # CORS allow-list for the API (comma-separated)
+MAX_MONTE_CARLO_SAMPLES=200    # upper bound for POST /api/analysis n_mc_samples
+DEFAULT_TARIFF_INR_PER_KWH=2.7 # assumed tariff (per-request override is validated)
+```
+
 ## What is built (vs the plan doc)
 | Doc item | Status |
 |---|---|

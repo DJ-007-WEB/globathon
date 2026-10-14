@@ -23,9 +23,27 @@ from vareng.contract import Analysis
 
 log = logging.getLogger("variance-engine")
 
-MAX_MC = int(os.environ.get("MAX_MONTE_CARLO_SAMPLES", "200"))
-DEFAULT_TARIFF = float(os.environ.get("DEFAULT_TARIFF_INR_PER_KWH", str(TARIFF_INR_PER_KWH)))
-ORIGINS = [o.strip() for o in os.environ.get("FRONTEND_ORIGINS", "*").split(",") if o.strip()]
+def _env_config():
+    """Validate startup config with clear messages (11 §2); never log secrets."""
+    try:
+        max_mc = int(os.environ.get("MAX_MONTE_CARLO_SAMPLES", "200"))
+    except ValueError:
+        raise RuntimeError("Invalid MAX_MONTE_CARLO_SAMPLES: must be an integer >= 1.")
+    if max_mc < 1:
+        raise RuntimeError("Invalid MAX_MONTE_CARLO_SAMPLES: must be >= 1.")
+    try:
+        tariff = float(os.environ.get("DEFAULT_TARIFF_INR_PER_KWH", str(TARIFF_INR_PER_KWH)))
+    except ValueError:
+        raise RuntimeError("Invalid DEFAULT_TARIFF_INR_PER_KWH: must be a number in [0, 100].")
+    if not (tariff == tariff and 0 <= tariff <= 100):
+        raise RuntimeError("Invalid DEFAULT_TARIFF_INR_PER_KWH: must be finite and in [0, 100].")
+    origins = [o.strip() for o in os.environ.get("FRONTEND_ORIGINS", "*").split(",") if o.strip()]
+    if not origins:
+        raise RuntimeError("Invalid FRONTEND_ORIGINS: provide at least one origin or '*'.")
+    return max_mc, tariff, origins
+
+
+MAX_MC, DEFAULT_TARIFF, ORIGINS = _env_config()
 
 SERVICE = "variance-engine"
 

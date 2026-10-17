@@ -141,16 +141,16 @@ def test_invalid_env_fails_with_clear_message():
 def test_frontend_static_served_and_wired():
     # 08: existing UI served intact with API/static wiring the JS expects
     r = c.get("/")
-    assert r.status_code == 200 and "Variance Explainer" in r.text
+    assert r.status_code == 200 and "SolarSleuth" in r.text
     for tab in ("overview", "analysis", "class", "valid", "report", "why"):
         assert f'data-tab="{tab}"' in r.text
     # landing → demo flow (additive section, existing app wrapped untouched)
-    for marker in ('id="landing"', 'id="landscen"', 'id="app" class="hide"',
-                   'id="startdemo"', "Start the demo", 'class="pre-demo"'):
+    for marker in ('id="landing"', 'id="landscen"', 'id="app" class="app-shell hide"',
+                   'id="startdemo"', "Explore the live demo", 'class="pre-demo"', 'id="authModal"', 'id="chatPanel"'):
         assert marker in r.text, marker
     assert 'id="apinote"' in r.text and 'id="retry"' not in r.text  # error UI is JS-rendered only
     r = c.get("/app.js")
-    assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower()
+    assert r.status_code == 200 and "getJSON" in r.text and "shapley" in r.text.lower() and "csvFile" in r.text and "chatAnswer" in r.text
     for fn in ("enterApp", "goLanding", "fetchT", "rWhy", "API_BASE", "apiUrl"):
         assert fn in r.text, fn
     assert "localhost" not in r.text  # no hard-coded host: same-origin api/ + data/ URLs

@@ -64,3 +64,39 @@ once (remembered) while `data/*.json` snapshots stay same-origin.
 ## Layout
 `engine/vareng` physics, synth, attribution, validation, narrative, contract · `engine/api.py` · `engine/build_static.py`
 `engine/tests` · `frontend/` (no dependencies) · `sample_reports/` · `docs/METHOD.md`
+
+## Frontend demo additions (October 2026)
+
+The frontend now uses the **SolarSleuth** solar-operations visual identity with responsive layouts and a light/dark theme toggle. It includes:
+
+- A polished landing page and a plant overview dashboard using the existing precomputed scenario metadata and engine snapshots.
+- A lightweight demo workspace access screen. Any non-empty name/email and password can enter; it stores only a demo label/session marker in browser local storage. **This is not production authentication and must not be used to protect real or sensitive data.**
+- A deterministic, rule-based Variance Assistant with prepared answers grounded in the currently selected synthetic analysis. It does not call an external AI API and does not generate free-form model diagnoses.
+- CSV import for a small, documented format: `month`, `forecast_kwh`, `actual_kwh`, with optional signed `weather_loss_kwh`, `downtime_loss_kwh`, and `curtailment_loss_kwh` cause contributions. The file is parsed and validated in the browser; summary totals are calculated from the uploaded rows. Missing cause columns remain unexplained. Uploaded CSV data is **not** passed into the scenario engine's hourly Shapley/Monte Carlo pipeline.
+- A scenario-matched synthetic CSV download: the monthly forecast/actual values are derived from the currently selected scenario's precomputed monthly gap and percentage, so the imported gap trend corresponds to that scenario. Cause-level evidence is not fabricated.
+
+The original deterministic engine, scenario snapshots, cause evidence, classification, validation, API contracts, and investor report flow are preserved. All built-in records remain synthetic. The backend test suite is run with:
+
+```bash
+cd engine
+python tests/run_tests.py
+```
+
+## Demo walkthrough
+
+1. Open the landing page and choose **Explore the live demo**.
+2. Enter any non-empty demo credentials. No real account is created.
+3. On Overview, switch between scenarios and periods; inspect the KPI cards and monthly variance signal.
+4. Choose **Download template**, then upload that downloaded CSV. The app validates it and shows metrics computed from the imported rows.
+5. Open **Variance analysis**, click a waterfall bar, and inspect the evidence drawer.
+6. Open **Validation lab** to show the injected-vs-recovered comparison.
+7. Open **Investor report** and use Print / Save as PDF.
+8. Open **Ask the assistant** and ask a supported question such as “Why did production fall?”
+9. Toggle light/dark mode to show both visual themes.
+
+The optional external font stylesheet uses Google Fonts when online; the application itself does not require an AI API or live weather API for its demo flow.
+
+## Demo login and data upload (demo build)
+- Demo credentials: `demo@solarsleuth.app` / `Demo@1234`. Sign-up also works; accounts are stored (salted, hashed) in the browser's localStorage only. This is demo-only auth, not production security.
+- **Data upload** tab: validates a monthly CSV in the browser (samples in `frontend/samples/`) and reconciles the gap from the columns provided. Uploaded data is not run through the simulator.
+- Script for the video: `docs/DEMO_VIDEO_SCRIPT.md`.

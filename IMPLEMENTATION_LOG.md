@@ -708,3 +708,20 @@ and next action after each phase.
 - Next: pick up next MD file in user's one-at-a-time sequence (`README.md` run/contract
   verification, then `docs/METHOD.md` method-vs-code check) — awaiting user confirm before
   editing anything.
+
+## Frontend polish and demo-focused additions (2026-10-15)
+
+- Rebranded the frontend as SolarSleuth with a solar-energy visual identity, responsive landing page, consistent app shell, typography scale, spacing, and light/dark theme tokens.
+- Added a plant overview dashboard that reuses existing scenario metadata and analysis snapshots, with navigation to existing analysis, classification, validation, report, and methodology views.
+- Added demo-only workspace access. It accepts non-empty demo credentials and stores only a session label/marker; it is explicitly not real authentication and does not store passwords.
+- Added a deterministic rule-based assistant for supported questions. It uses the selected analysis values and fixed method explanations; it has no external model/API dependency.
+- Added browser-side CSV validation and summary calculations. Required columns: `month`, `forecast_kwh`, `actual_kwh`; optional signed cause columns: `weather_loss_kwh`, `downtime_loss_kwh`, `curtailment_loss_kwh`. The importer calculates uploaded-row summaries and labels missing cause contribution as unexplained; it does not claim the uploaded file has been processed by the hourly engine.
+- The downloadable CSV is derived from the selected scenario's monthly precomputed gaps so its expected/actual trend matches that scenario's metadata. No cause-level truth is invented.
+- Preserved the existing backend engine and its APIs. Updated the static frontend contract test to reflect the new product name and added frontend feature markers.
+- Verification: `node --check frontend/app.js` passed; `python engine/tests/run_tests.py` passed all 42 tests. A headless browser smoke test was attempted but local navigation was blocked by the execution environment's browser policy, so it is not reported as passed.
+
+## Demo build additions
+- Added `frontend/auth.js` (login/signup/session, demo account), `frontend/data.js` (CSV upload page with validation and reconciliation), `frontend/demo.css`, `frontend/samples/*.csv`.
+- Auth modal rebuilt (demo credentials, show/hide password, inline errors); avatar now opens a user menu with Sign out.
+- Overview upload card replaced by a link to the new Data upload tab; KPI grid wrap fixed.
+- Verified with a Playwright run: login errors, demo login, signup validation, upload (valid and broken), dark theme, sign out, session persistence.

@@ -381,7 +381,7 @@ export default function App() {
         <b>Ask the assistant</b>
       </button>
 
-      {chatOpen && <ChatPanel page={tab} data={data} />}
+      {chatOpen && <ChatPanel page={tab} data={data} onClose={() => setChatOpen(false)} />}
     </>
   );
 }

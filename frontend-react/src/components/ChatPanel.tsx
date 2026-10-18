@@ -7,9 +7,10 @@ import { PageKey } from "../utils/chatRules";
 interface ChatPanelProps {
   page: PageKey;
   data: any;
+  onClose: () => void;
 }
 
-export const ChatPanel = ({ page, data }: ChatPanelProps) => {
+export const ChatPanel = ({ page, data, onClose }: ChatPanelProps) => {
   const { messages, input, setInput, submit, addSuggested } = useChat(page, data);
 
   const suggested: string[] = (() => {
@@ -43,7 +44,7 @@ export const ChatPanel = ({ page, data }: ChatPanelProps) => {
             <span className="status-dot"></span> Rule-based demo assistant — {page} page
           </small>
         </div>
-        <button id="chatClose" className="icon-btn" aria-label="Close assistant" onClick={() => {}}>
+        <button id="chatClose" className="icon-btn" aria-label="Close assistant" onClick={onClose}>
           ×
         </button>
       </header>

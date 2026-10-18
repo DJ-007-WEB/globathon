@@ -1,8 +1,8 @@
-# Pinned to the versions the 42-test suite runs green on (numpy 2.5.3, pandas 3.0.6,
-# starlette 1.6.0, uvicorn 0.52.4, pydantic 2.13.5, httpx 0.28.1).
-numpy~=2.5
-pandas~=3.0
-starlette~=1.6
-uvicorn~=0.52
-pydantic~=2.13
-httpx~=0.28  # test client only (engine/tests/test_api.py)
+# Python dependencies for the Variance Explainer backend
+# Version ranges chosen to resolve on Render's Python 3.11 environment
+numpy>=2.0,<3.0
+pandas>=2.0,<3.0
+starlette>=0.30,<1.0
+uvicorn>=0.20,<1.0
+pydantic>=2.0,<3.0
+httpx>=0.23,<1.0  # test client only (engine/tests/test_api.py)

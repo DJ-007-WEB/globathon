@@ -1,7 +1,7 @@
 /* Main app — ties landing, workspace, data loading, auth and chat together.
    Same flow as the original app.js, ported to React. */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useData } from "./hooks/useData";
 import { useAuth } from "./hooks/useAuth";
 import { Landing } from "./components/Landing";
@@ -51,7 +51,19 @@ export default function App() {
   const [apiUse, setApiUse] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // Close the account menu when clicking anywhere outside it (same as the
+  // original vanilla app; the React port had lost this toggle).
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeMenu = (ev: MouseEvent) => {
+      if (!(ev.target as HTMLElement).closest(".avatar-wrap")) setMenuOpen(false);
+    };
+    document.addEventListener("click", closeMenu);
+    return () => document.removeEventListener("click", closeMenu);
+  }, [menuOpen]);
 
   // Load scenario metadata on startup
   useEffect(() => {
@@ -70,6 +82,16 @@ export default function App() {
   useEffect(() => {
     setApiUse(apiConnected);
   }, [apiConnected]);
+
+  // Load the default scenario as soon as the workspace is opened.
+  // (Previously data only appeared after switching scenario or period.)
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (preDemo || bootstrapped.current) return;
+    bootstrapped.current = true;
+    void load(scenario, period);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preDemo]);
 
   // Initialize theme from localStorage and apply to document
   useEffect(() => {
@@ -121,7 +143,7 @@ export default function App() {
 
     switch (page) {
       case "overview":
-        return <Overview a={a} meta={meta} scenario={scenario} useApi={apiUse} onGoto={handleTabChange} />;
+        return <Overview a={a} useApi={apiUse} onGoto={handleTabChange} />;
       case "data":
         return <DataUpload meta={meta} scenario={scenario} />;
       case "analysis":
@@ -222,18 +244,38 @@ export default function App() {
           <div className="avatar-wrap">
             {user ? (
               <>
-                <button className="avatar-btn" id="accountButton" title="Account" aria-haspopup="true">
+                <button
+                  className="avatar-btn"
+                  id="accountButton"
+                  title="Account"
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(!menuOpen);
+                  }}
+                >
                   {user.name.charAt(0).toUpperCase()}
                 </button>
-                <div className="user-menu" id="userMenu">
+                <div className={"user-menu" + (menuOpen ? "" : " hide")} id="userMenu">
                   <div className="um-name" id="umName">{user.name}</div>
                   <div className="um-email" id="umEmail">{user.email}</div>
-                  <button type="button" id="umData">Upload plant data</button>
+                  <button
+                    type="button"
+                    id="umData"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setTab("data");
+                    }}
+                  >
+                    Upload plant data
+                  </button>
                   <button
                     type="button"
                     className="um-out"
                     id="umOut"
                     onClick={() => {
+                      setMenuOpen(false);
                       logout();
                       setPreDemo(true);
                     }}

@@ -1,7 +1,10 @@
-/* Investor report view — same visual and data as original rReport().
-   Adds simple explanation after calculation. */
+/* Investor report view — printable page with inline variance analysis charts
+   (waterfall + forecast-vs-actual bars), each explained in plain language. */
 
-import { fmt, mwh, sg, esc } from "../../utils/format";
+import { fmt, mwh, sg, esc, lakh } from "../../utils/format";
+import { Waterfall } from "../Waterfall";
+import { MonthlyChart } from "../MonthlyChart";
+import { buildChartSeries } from "../../utils/series";
 
 interface ReportProps {
   a: any;
@@ -11,6 +14,47 @@ interface ReportProps {
 export const Report = ({ a, v }: ReportProps) => {
   const u = a.unexplained;
   const w = a.weather;
+  const series = buildChartSeries(a);
+
+  // Same waterfall steps as the interactive Variance analysis view (Shapley).
+  const steps = (() => {
+    const out: any[] = [];
+    let cum = 0;
+    for (const c of a.components.filter((c: any) => c.present)) {
+      out.push({
+        id: c.id,
+        label: c.cause,
+        v: c.kwh,
+        start: cum,
+        end: cum + c.kwh,
+        lo: cum + c.lower_kwh,
+        hi: cum + c.upper_kwh,
+        cls: c.class,
+        c,
+      });
+      cum += c.kwh;
+    }
+    out.push({
+      id: "unexplained",
+      label: "UNEXPLAINED",
+      v: u.kwh,
+      start: cum,
+      end: cum + u.kwh,
+      lo: cum + u.lower_kwh,
+      hi: cum + u.upper_kwh,
+      cls: "unexplained",
+    });
+    cum += u.kwh;
+    out.push({
+      id: "total",
+      label: "Total gap",
+      v: cum,
+      start: 0,
+      end: cum,
+      cls: "total",
+    });
+    return out;
+  })();
 
   const simpleExplanation = (
     <div className="card">
@@ -18,6 +62,9 @@ export const Report = ({ a, v }: ReportProps) => {
       <div className="sub">
         <p>
           <strong>Summary:</strong> a plain-language paragraph of what happened this period. Every number in it is machine-checked against the engine — nothing is invented.
+        </p>
+        <p>
+          <strong>Charts:</strong> Chart 1 (variance waterfall) shows where the megawatt-hours went — starting from the forecast, each named cause, then the unexplained remainder, landing exactly on the metered actual. Chart 2 shows when the variance occurred. Thin whiskers on the waterfall bars are the 90% uncertainty band from Monte Carlo runs.
         </p>
         <p>
           <strong>Cause table:</strong> each named cause with its contribution (MWh), monetary impact (₹ lakh), 90% uncertainty band, and confidence level. Curtailment may be flagged "potentially claimable — contract review required."
@@ -35,7 +82,7 @@ export const Report = ({ a, v }: ReportProps) => {
           <strong>Validation:</strong> how recovered causes compare to injected truth, and whether the hidden cause landed in Unexplained.
         </p>
         <p>
-          <strong>Print:</strong> use the Print / Save as PDF button to generate a print-ready investor report.
+          <strong>Print:</strong> use the Print / Save as PDF button to generate a print-ready investor report — the charts are included.
         </p>
         <p>
           <strong>All data is synthetic:</strong> this is a demo with simulated plant, weather, and tariff — not real operational data.
@@ -54,8 +101,8 @@ export const Report = ({ a, v }: ReportProps) => {
       <div className="report">
         <h1>Investor variance report</h1>
         <div className="note">
-          {esc(a.plant_name)} · {esc(a.period_label)} · model {esc(a.model_version)} ·{" "}
-          <b>SYNTHETIC DATA</b>
+          {esc(a.plant_name)} · {esc(a.period_label)} · scenario “{esc(a.scenario_name)}” · model{" "}
+          {esc(a.model_version)} · <b>SYNTHETIC DATA</b>
         </div>
         <h2>Summary</h2>
         <p>{esc(a.narrative.text)}</p>
@@ -63,12 +110,75 @@ export const Report = ({ a, v }: ReportProps) => {
           Every number in this paragraph is machine-checked against engine output:{" "}
           {a.narrative.numbers_checked ? "passed ✓" : "FAILED"}.
         </div>
-        <h2>Waterfall</h2>
-        {/* Minimal waterfall placeholder using same steps logic as Analysis */}
-        <div className="note">
-          See Variance Analysis tab for the interactive waterfall chart.
+
+        <h2>Variance analysis — from forecast to actual</h2>
+        <p>
+          The two charts below explain this period's gap of <b>{sg(a.gap_kwh, 0)}</b> (
+          {fmt(a.gap_pct, 1)}% vs forecast). Chart 1 bridges the megawatt-hours: starting from the
+          forecast, every named cause moves the running total up or down, the hatched bar is the
+          unexplained remainder, and the final bar lands on the metered actual. Chart 2 shows when in
+          the period the variance occurred. Both charts reconcile to the same gap as the table below.
+        </p>
+        <div className="rpt-kpis">
+          <div className="rpt-kpi">
+            <small>Forecast energy</small>
+            <b>{mwh(a.forecast_kwh, 0)}</b>
+            <em>Expected generation · {esc(a.period_label)}</em>
+          </div>
+          <div className="rpt-kpi">
+            <small>Actual energy</small>
+            <b>{mwh(a.actual_kwh, 0)}</b>
+            <em>Metered / simulated production</em>
+          </div>
+          <div className="rpt-kpi">
+            <small>Production variance (gap)</small>
+            <b className={a.gap_kwh < 0 ? "neg" : "pos"}>{sg(a.gap_kwh, 0)}</b>
+            <em>
+              {fmt(a.gap_pct, 1)}% vs forecast · {lakh(a.gap_inr)} illustrative
+            </em>
+          </div>
         </div>
+        <div className="rpt-figure">
+          <Waterfall steps={steps} totalLabel="Total gap" width={960} height={420} />
+          <div className="rpt-caption">
+            <b>Chart 1 — variance waterfall (MWh vs forecast).</b> How to read: each bar is one cause
+            of the gap. Red bars reduced production versus forecast; green bars added production; the
+            hatched bar is the part of the gap that the known causes cannot explain. Thin whiskers on
+            the bars are the 90% uncertainty band ({a.monte_carlo?.samples ?? 80} Monte Carlo runs).
+            The dark bar on the right is the total gap — the difference between metered actual and
+            forecast.
+          </div>
+        </div>
+        <div className="rpt-figure">
+          <MonthlyChart
+            labels={series.labels}
+            forecast_kwh={series.forecast_kwh}
+            actual_kwh={series.actual_kwh}
+            gap_pct={series.gap_pct}
+          />
+          <div className="rpt-caption">
+            <b>Chart 2 — {series.monthly ? "monthly" : "daily"} forecast vs actual (MWh).</b> How to
+            read: each group is one {series.monthly ? "month" : "day"}. The grey bar is the forecast;
+            the colored bar is the metered actual — red when the plant fell short, green when it met
+            or beat forecast
+            {series.monthly
+              ? ". The percentage under each month is the variance versus that month's forecast; the widest shortfalls usually drive the total gap."
+              : "."}
+          </div>
+        </div>
+        <div className="note">
+          Bridge check: Σ named causes {sg(a.reconciliation.sum_components_kwh, 0)} + unexplained{" "}
+          {sg(u.kwh, 0)} = total gap {sg(a.gap_kwh, 0)} —{" "}
+          {a.reconciliation.closes ? "reconciles exactly ✓" : "DOES NOT CLOSE"}. Illustrative
+          monetary impact: {lakh(a.gap_inr)} at ₹{a.tariff_inr_per_kwh}/kWh.
+        </div>
+
         <h2>Causes</h2>
+        <p className="note">
+          One row per named cause: its contribution to the gap in MWh and ₹ lakh, the 90% uncertainty
+          band, and a confidence rating. Rows flagged "potentially claimable" (curtailment) require
+          contract review — they are not legal conclusions.
+        </p>
         <table>
           <tr>
             <th>Cause</th>
@@ -102,7 +212,7 @@ export const Report = ({ a, v }: ReportProps) => {
             <td>–</td>
             <td>–</td>
           </tr>
-          <tr style={{ background: "#fffbeb" }}>
+          <tr className="rpt-una-row">
             <td><b>Unexplained</b></td>
             <td>–</td>
             <td><b>{fmt(u.kwh / 1000, 1)}</b></td>

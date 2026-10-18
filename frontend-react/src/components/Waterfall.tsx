@@ -66,22 +66,22 @@ export const Waterfall = ({
     gridLines.push(
       <line
         key={`g-${t}`}
+        className={Math.abs(t) < 1e-9 ? "wf-zero" : "wf-grid"}
         x1={m.l}
         x2={W - m.r}
         y1={y(t)}
         y2={y(t)}
-        stroke={Math.abs(t) < 1e-9 ? "#1c2430" : "#e8e4d9"}
         strokeWidth={Math.abs(t) < 1e-9 ? 1.4 : 1}
       />
     );
     gridLines.push(
       <text
         key={`gt-${t}`}
+        className="wf-tick"
         x={m.l - 8}
         y={y(t) + 4}
         textAnchor="end"
         fontSize={11}
-        fill="#667085"
       >
         {fmt(t / 1000, 0)}
       </text>
@@ -92,16 +92,16 @@ export const Waterfall = ({
   steps.forEach((s, i) => {
     const top = Math.min(y(s.start), y(s.end));
     const h = Math.max(2, Math.abs(y(s.start) - y(s.end)));
-    const fill =
+    const fillClass =
       s.cls === "unexplained"
-        ? "url(#hatch)"
+        ? ""
         : s.cls === "total"
-          ? "#1f3a5f"
+          ? "wf-total"
           : s.cls === "interaction"
-            ? "#94a3b8"
+            ? "wf-interaction"
             : s.v < 0
-              ? "#b4452b"
-              : "#0f766e";
+              ? "wf-neg"
+              : "wf-pos";
     const stroke = s.cls === "unexplained" ? "#7c2d12" : "none";
     const sw = s.cls === "unexplained" ? 3 : 0;
     const isSel = sel === s.id ? " sel" : "";
@@ -109,14 +109,14 @@ export const Waterfall = ({
     bars.push(
       <rect
         key={`bar-${i}`}
-        className={`bar${isSel}`}
+        className={`bar${isSel} ${fillClass}`.trim()}
         data-id={s.id}
         x={bx(i)}
         y={top}
         width={bwid}
         height={h}
         rx={3}
-        fill={fill}
+        fill={s.cls === "unexplained" ? "url(#hatch)" : undefined}
         stroke={stroke}
         strokeWidth={sw}
         onClick={() => onSelect?.(s.id)}
@@ -129,7 +129,7 @@ export const Waterfall = ({
     if (s.lo != null && s.hi != null && s.cls !== "total") {
       const cx = bx(i) + bwid / 2;
       bars.push(
-        <g key={`whisker-${i}`} stroke="#1c2430" strokeWidth={1.5}>
+        <g key={`whisker-${i}`} className="wf-whisker" strokeWidth={1.5}>
           <line x1={cx} x2={cx} y1={y(s.lo!)} y2={y(s.hi!)} />
           <line x1={cx - 6} x2={cx + 6} y1={y(s.lo!)} y2={y(s.lo!)} />
           <line x1={cx - 6} x2={cx + 6} y1={y(s.hi!)} y2={y(s.hi!)} />
@@ -145,12 +145,12 @@ export const Waterfall = ({
     bars.push(
       <text
         key={`val-${i}`}
+        className={s.cls === "unexplained" ? "wf-value wf-una-text" : "wf-value"}
         x={bx(i) + bwid / 2}
         y={ty}
         textAnchor="middle"
         fontSize={12}
         fontWeight={s.cls === "unexplained" ? 800 : 600}
-        fill={s.cls === "unexplained" ? "#7c2d12" : "#1c2430"}
       >
         {fmt(s.v / 1000, 1)}
       </text>
@@ -161,12 +161,12 @@ export const Waterfall = ({
       bars.push(
         <text
           key={`lbl-${i}-${k}`}
+          className={s.cls === "unexplained" ? "wf-label wf-una-text" : "wf-label"}
           x={bx(i) + bwid / 2}
           y={H - m.b + 16 + k * 13}
           textAnchor="middle"
           fontSize={11.5}
           fontWeight={s.cls === "unexplained" ? 800 : 500}
-          fill={s.cls === "unexplained" ? "#7c2d12" : "#1c2430"}
         >
           {esc(l)}
         </text>
@@ -177,11 +177,11 @@ export const Waterfall = ({
       bars.push(
         <text
           key={`cls-${i}`}
+          className="wf-tick"
           x={bx(i) + bwid / 2}
           y={H - m.b + 16 + lbl.length * 13 + 2}
           textAnchor="middle"
           fontSize={10}
-          fill="#667085"
         >
           {esc(s.c.class_label.toLowerCase())}
         </text>
@@ -192,11 +192,11 @@ export const Waterfall = ({
       bars.push(
         <line
           key={`conn-${i}`}
+          className="wf-connector"
           x1={bx(i) + bwid}
           x2={bx(i + 1)}
           y1={y(s.end)}
           y2={y(s.end)}
-          stroke="#98a2b3"
           strokeDasharray="3 3"
         />
       );
@@ -225,9 +225,9 @@ export const Waterfall = ({
       <text
         x={14}
         y={H / 2 - 30}
+        className="wf-tick"
         transform={`rotate(-90 14 ${H / 2 - 30})`}
         fontSize={11}
-        fill="#667085"
         textAnchor="middle"
       >
         MWh vs forecast

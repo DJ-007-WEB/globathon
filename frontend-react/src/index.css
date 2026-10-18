@@ -1,6 +1,7 @@
 /* Original design system — preserved exactly from frontend/style.css and frontend/demo.css */
 @import "./style.css";
 @import "./demo.css";
+@import "./views.css";
 
 /* Root element */
 #root {

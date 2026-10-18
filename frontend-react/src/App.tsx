@@ -51,6 +51,7 @@ export default function App() {
   const [apiUse, setApiUse] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   // Load scenario metadata on startup
   useEffect(() => {
@@ -69,6 +70,24 @@ export default function App() {
   useEffect(() => {
     setApiUse(apiConnected);
   }, [apiConnected]);
+
+  // Initialize theme from localStorage and apply to document
+  useEffect(() => {
+    let stored: "light" | "dark" = "light";
+    try {
+      const v = localStorage.getItem("solarsleuth_theme");
+      if (v === "light" || v === "dark") stored = v;
+    } catch {}
+    setTheme(stored);
+    document.documentElement.dataset.theme = stored;
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("solarsleuth_theme", next); } catch {}
+  };
 
   const handleScenarioChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -195,9 +214,10 @@ export default function App() {
             className="icon-btn theme-toggle"
             id="themeToggle"
             aria-label="Toggle light and dark mode"
-            title="Toggle theme"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={toggleTheme}
           >
-            <span className="theme-symbol">☼</span>
+            <span className="theme-symbol">{theme === "dark" ? "☾" : "☼"}</span>
           </button>
           <div className="avatar-wrap">
             {user ? (

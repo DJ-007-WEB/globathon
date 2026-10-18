@@ -11,11 +11,11 @@ interface OverviewProps {
   meta: any;
   scenario: string;
   useApi: boolean;
+  onGoto: (tab: string) => void;
 }
 
-export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
+export const Overview = ({ a, meta, scenario, useApi, onGoto }: OverviewProps) => {
   const { current, isAuthed } = useAuth();
-  const [goto, setGoto] = useState<string | null>(null);
 
   const scenMeta = meta.scenarios.find((x: any) => x.key === scenario);
   const months = scenMeta?.monthly || [];
@@ -70,12 +70,6 @@ export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
       </div>
     </div>
   );
-
-  useEffect(() => {
-    if (goto) {
-      // handled by parent via callback
-    }
-  }, [goto]);
 
   return (
     <div className="overview-grid">
@@ -165,13 +159,13 @@ export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
             <div className="overview-actions" style={{ marginTop: 15 }}>
               <button
                 className="btn btn-primary"
-                onClick={() => setGoto("analysis")}
+                onClick={() => onGoto("analysis")}
               >
                 Explain this variance <span> → </span>
               </button>{" "}
               <button
                 className="small-action"
-                onClick={() => setGoto("valid")}
+                onClick={() => onGoto("valid")}
               >
                 Open validation lab
               </button>
@@ -197,7 +191,7 @@ export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
             </p>
             <button
               className="small-action"
-              onClick={() => setGoto("analysis")}
+              onClick={() => onGoto("analysis")}
             >
               Inspect evidence →
             </button>
@@ -210,7 +204,7 @@ export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
             </div>
             <button
               className="btn btn-primary"
-              onClick={() => setGoto("data")}
+              onClick={() => onGoto("data")}
             >
               Open data upload <span> → </span>
             </button>
@@ -241,10 +235,6 @@ export const Overview = ({ a, meta, scenario, useApi }: OverviewProps) => {
           </div>
         </div>
       </div>
-
-      {goto === "analysis" ? null : null}
-      {goto === "valid" ? null : null}
-      {goto === "data" ? null : null}
     </div>
   );
 };

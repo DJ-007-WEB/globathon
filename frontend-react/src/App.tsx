@@ -121,7 +121,7 @@ export default function App() {
 
     switch (page) {
       case "overview":
-        return <Overview a={a} meta={meta} scenario={scenario} useApi={apiUse} />;
+        return <Overview a={a} meta={meta} scenario={scenario} useApi={apiUse} onGoto={handleTabChange} />;
       case "data":
         return <DataUpload meta={meta} scenario={scenario} />;
       case "analysis":

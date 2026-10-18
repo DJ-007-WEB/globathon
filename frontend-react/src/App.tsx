@@ -243,14 +243,9 @@ export default function App() {
                 </div>
               </>
             ) : (
-              <>
-                <button className="signin-btn hide" id="signinButton" type="button">
-                  Sign in
-                </button>
-                <button className="avatar-btn" id="accountButton" title="Account" aria-haspopup="true">
-                  G
-                </button>
-              </>
+              <button className="signin-btn" id="signinButton" type="button" onClick={() => setShowAuth(true)}>
+                Sign in
+              </button>
             )}
           </div>
         </div>

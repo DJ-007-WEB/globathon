@@ -35,7 +35,7 @@ export const ChatPanel = ({ page, data, onClose }: ChatPanelProps) => {
   })();
 
   return (
-    <section id="chatPanel" className="chat-panel hide" aria-label="Variance Assistant">
+    <section id="chatPanel" className="chat-panel" aria-label="Variance Assistant">
       <header className="chat-head">
         <div className="chat-avatar">✳</div>
         <div>

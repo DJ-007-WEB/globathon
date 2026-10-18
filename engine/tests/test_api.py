@@ -107,12 +107,12 @@ def test_report_endpoint():
 
 def test_frontend_report_template_markers():
     # 10 §1: the print-tab template renders the same 12 items from the same object
-    src = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "app.js"),
+    src = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend-react",
+                            "src", "components", "views", "Report.tsx"),
                encoding="utf-8").read()
-    for marker in ("Investor variance report", "SYNTHETIC DATA", "a.interaction.note",
-                   "pct_of_gap", "a.weather", "a.evidence", "<h2>Validation</h2>",
-                   "<h2>Evidence</h2>", "<h2>Weather</h2>", "numbers_checked",
-                   "window.print()", "esc("):
+    for marker in ("Investor variance report", "SYNTHETIC DATA",
+                   "<h2>Validation</h2>", "<h2>Evidence</h2>", "<h2>Weather</h2>",
+                   "numbers_checked", "window.print()", "lakh("):
         assert marker in src, marker
 
 def test_cors_origins_from_env():

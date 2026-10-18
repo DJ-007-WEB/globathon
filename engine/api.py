@@ -306,7 +306,7 @@ async def _server_error(request, exc):
     return _err(_rid(), "INTERNAL_ERROR", "An unexpected error occurred.", [], 500)
 
 
-FRONT = os.path.join(os.path.dirname(__file__), "..", "frontend")
+FRONT = os.path.join(os.path.dirname(__file__), "..", "frontend-react", "dist")
 middleware = [Middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST", "OPTIONS"],
                         allow_headers=["*"])]
 app = Starlette(middleware=middleware,

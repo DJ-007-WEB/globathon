@@ -1,0 +1,9 @@
+/* Original design system — preserved exactly from frontend/style.css and frontend/demo.css */
+@import "./style.css";
+@import "./demo.css";
+
+/* Root element */
+#root {
+  min-height: 100vh;
+  display: contents;
+}

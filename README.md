@@ -8,11 +8,11 @@ Explains why a solar plant missed its forecast: named causes (kWh and ₹), an e
 ```bash
 pip install -r requirements.txt
 cd engine
-python build_static.py                 # optional: regenerates frontend/data/*.json (~25 s)
+cd frontend-react && npm install && npm run build   # builds React frontend to frontend-react/dist/
 python -m uvicorn api:app --port 8000 # open http://localhost:8000
 python tests/run_tests.py             # 8 tests incl. exact reconciliation
 ```
-No server? Frontend works from any static host (`frontend/`, e.g. Vercel) because results are pre-built in `frontend/data/`.
+No server? The built React frontend works from any static host (`frontend-react/dist/`) because results are pre-built in `frontend-react/dist/data/`.
 Investor PDF: open the *Investor report* tab → Print / Save as PDF (sample in `sample_reports/`).
 
 ## Configuration (optional)
@@ -63,7 +63,7 @@ once (remembered) while `data/*.json` snapshots stay same-origin.
 
 ## Layout
 `engine/vareng` physics, synth, attribution, validation, narrative, contract · `engine/api.py` · `engine/build_static.py`
-`engine/tests` · `frontend/` (no dependencies) · `sample_reports/` · `docs/METHOD.md`
+`engine/tests` · `frontend-react/` (React + Vite) · `sample_reports/` · `docs/METHOD.md`
 
 ## Frontend demo additions (October 2026)
 
@@ -98,5 +98,5 @@ The optional external font stylesheet uses Google Fonts when online; the applica
 
 ## Demo login and data upload (demo build)
 - Demo credentials: `demo@solarsleuth.app` / `Demo@1234`. Sign-up also works; accounts are stored (salted, hashed) in the browser's localStorage only. This is demo-only auth, not production security.
-- **Data upload** tab: validates a monthly CSV in the browser (samples in `frontend/samples/`) and reconciles the gap from the columns provided. Uploaded data is not run through the simulator.
+- **Data upload** tab: validates a monthly CSV in the browser (samples in `frontend-react/public/samples/`) and reconciles the gap from the columns provided. Uploaded data is not run through the simulator.
 - Script for the video: `docs/DEMO_VIDEO_SCRIPT.md`.

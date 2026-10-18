@@ -176,7 +176,8 @@ export const AuthModal = ({ open, onClose, onAuth }: AuthModalProps) => {
             type="submit"
             style={{ marginTop: 14 }}
           >
-            {su ? "Create account <span>→</span>" : "Sign in <span>→</span>"}
+            {su ? "Create account " : "Sign in "}
+            <span>→</span>
           </button>
           <div className="auth-disclaimer">
             <span>ⓘ</span> Demo-only: accounts are saved in this browser only · Not production security.
